@@ -40,14 +40,17 @@ const STUDIO = {
   currency: "RUB",
   openingTime: "10:00",
   closingTime: "20:00",
+  slotStepMinutes: 30,
+  holdTtlMinutes: 10,
 };
 
 // Тестовые учётки. Пароли в открытом виде нужны только для входа в dev —
-// в базе лежит исключительно scrypt-хеш.
+// в базе лежит исключительно scrypt-хеш. Роли задаём списком: у одного
+// пользователя их может быть несколько (например, master + admin).
 const USERS = [
-  { email: "admin@lumi.studio", role: "admin", password: "Admin123!" },
-  { email: "master@lumi.studio", role: "master", password: "Master123!" },
-  { email: "client@lumi.studio", role: "client", password: "Client123!" },
+  { email: "admin@lumi.studio", roles: ["admin"], password: "Admin123!" },
+  { email: "master@lumi.studio", roles: ["master"], password: "Master123!" },
+  { email: "client@lumi.studio", roles: ["client"], password: "Client123!" },
 ];
 
 const SERVICES = [
@@ -149,27 +152,34 @@ function seed() {
     if (studio) {
       db.prepare(
         "UPDATE studios SET address = ?, phone = ?, timezone = ?, currency = ?," +
-          " opening_time = ?, closing_time = ?," +
+          " opening_time = ?, closing_time = ?, slot_step_minutes = ?, hold_ttl_minutes = ?," +
           " updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?"
-      ).run(STUDIO.address, STUDIO.phone, STUDIO.timezone, STUDIO.currency, STUDIO.openingTime, STUDIO.closingTime, studio.id);
+      ).run(STUDIO.address, STUDIO.phone, STUDIO.timezone, STUDIO.currency, STUDIO.openingTime, STUDIO.closingTime, STUDIO.slotStepMinutes, STUDIO.holdTtlMinutes, studio.id);
     } else {
       db.prepare(
-        "INSERT INTO studios (name, address, phone, timezone, currency, opening_time, closing_time)" +
-          " VALUES (?, ?, ?, ?, ?, ?, ?)"
-      ).run(STUDIO.name, STUDIO.address, STUDIO.phone, STUDIO.timezone, STUDIO.currency, STUDIO.openingTime, STUDIO.closingTime);
+        "INSERT INTO studios (name, address, phone, timezone, currency, opening_time, closing_time, slot_step_minutes, hold_ttl_minutes)" +
+          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ).run(STUDIO.name, STUDIO.address, STUDIO.phone, STUDIO.timezone, STUDIO.currency, STUDIO.openingTime, STUDIO.closingTime, STUDIO.slotStepMinutes, STUDIO.holdTtlMinutes);
     }
 
-    // --- Пользователи (upsert по уникальному email) ---
+    // --- Пользователи (upsert по уникальному email) + роли списком ---
+    // Роль хранится не в users, а в отдельной таблице user_roles; перед
+    // вставкой чистим старые роли пользователя, иначе повторный запуск
+    // оставит устаревшие.
     const upsertUser = db.prepare(
-      "INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, ?, 1)" +
+      "INSERT INTO users (email, password_hash, is_active) VALUES (?, ?, 1)" +
         " ON CONFLICT(email) DO UPDATE SET password_hash = excluded.password_hash," +
-        " role = excluded.role, is_active = 1," +
-        " updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')"
+        " is_active = 1, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')"
     );
+    const clearRoles = db.prepare("DELETE FROM user_roles WHERE user_id = ?");
+    const addRole = db.prepare("INSERT OR IGNORE INTO user_roles (user_id, role) VALUES (?, ?)");
     const userIdByEmail = new Map();
     for (const user of USERS) {
-      upsertUser.run(user.email, hashPassword(user.password), user.role);
-      userIdByEmail.set(user.email, db.prepare("SELECT id FROM users WHERE email = ?").get(user.email).id);
+      upsertUser.run(user.email, hashPassword(user.password));
+      const id = db.prepare("SELECT id FROM users WHERE email = ?").get(user.email).id;
+      userIdByEmail.set(user.email, id);
+      clearRoles.run(id);
+      for (const role of user.roles) addRole.run(id, role);
     }
 
     // --- Мастера (уникального ключа по имени нет — ищем по full_name) ---

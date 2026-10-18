@@ -8,7 +8,8 @@ const time = require("./time");
 function getStudio() {
   return getDb()
     .prepare(
-      "SELECT id, name, address, phone, timezone, currency, opening_time, closing_time FROM studios ORDER BY id LIMIT 1"
+      "SELECT id, name, address, phone, timezone, currency, opening_time, closing_time, " +
+        "slot_step_minutes, hold_ttl_minutes FROM studios ORDER BY id LIMIT 1"
     )
     .get();
 }
@@ -16,6 +17,21 @@ function getStudio() {
 function studioTimezone() {
   const studio = getStudio();
   return (studio && studio.timezone) || config.timezone;
+}
+
+/**
+ * Шаг сетки слотов (в минутах). Это настройка продукта — хранится в БД
+ * (studios.slot_step_minutes) и меняется администратором, а не в .env.
+ */
+function studioSlotStep() {
+  const studio = getStudio();
+  return (studio && studio.slot_step_minutes) || 30;
+}
+
+/** Время жизни удержания слота (в минутах) — тоже настройка в БД. */
+function studioHoldTtl() {
+  const studio = getStudio();
+  return (studio && studio.hold_ttl_minutes) || 10;
 }
 
 function getActiveMaster(masterId) {
@@ -176,7 +192,7 @@ function computeFreeIntervals({ masterId, date, timeZone, excludeBookingId, excl
 
 function computeSlots({ masterId, date, durationMin, stepMin, timeZone, excludeBookingId, excludeHoldId }) {
   const zone = timeZone || studioTimezone();
-  const step = stepMin || config.slotStepMinutes;
+  const step = stepMin || studioSlotStep();
   const free = computeFreeIntervals({ masterId, date, timeZone: zone, excludeBookingId, excludeHoldId });
   const now = time.nowIso();
 
@@ -210,13 +226,7 @@ function nearestFreeSlots({ masterId, durationMin, timeZone, fromIso, limit = 5,
 
   for (let i = 0; i <= daysAhead && found.length < limit; i += 1) {
     const date = time.addDaysDate(startDate, i);
-    const { slots } = computeSlots({
-      masterId,
-      date,
-      durationMin,
-      stepMin: config.slotStepMinutes,
-      timeZone: zone,
-    });
+    const { slots } = computeSlots({ masterId, date, durationMin, timeZone: zone });
     for (const slot of slots) {
       if (slot.startsAt >= from && found.length < limit) {
         found.push({ date, startsAt: slot.startsAt, endsAt: slot.endsAt, time: slot.time });
@@ -229,6 +239,8 @@ function nearestFreeSlots({ masterId, durationMin, timeZone, fromIso, limit = 5,
 module.exports = {
   getStudio,
   studioTimezone,
+  studioSlotStep,
+  studioHoldTtl,
   getActiveMaster,
   assertServicesExist,
   resolveServices,

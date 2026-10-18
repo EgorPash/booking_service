@@ -4,7 +4,7 @@ const http = require("node:http");
 const config = require("../config");
 const { Router } = require("./router");
 const { sendJson, sendError, readJsonBody } = require("./http");
-const { authenticate } = require("./session");
+const { authenticate, purgeExpiredSessions } = require("./session");
 const { cleanupExpiredHolds } = require("./holds");
 
 const router = new Router();
@@ -59,19 +59,22 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-try {
-  cleanupExpiredHolds();
-} catch (error) {
-  console.error("Не удалось очистить истёкшие удержания:", error.message);
-}
-
-const timer = setInterval(() => {
+function cleanupExpired() {
   try {
     cleanupExpiredHolds();
   } catch (error) {
-    console.error(error);
+    console.error("Не удалось очистить истёкшие удержания:", error.message);
   }
-}, 60 * 1000);
+  try {
+    purgeExpiredSessions();
+  } catch (error) {
+    console.error("Не удалось очистить истёкшие сессии:", error.message);
+  }
+}
+
+cleanupExpired();
+
+const timer = setInterval(cleanupExpired, 60 * 1000);
 timer.unref();
 
 server.listen(config.port, () => {

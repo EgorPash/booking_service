@@ -2,7 +2,7 @@
 
 const { getDb } = require("../../db/connection");
 const { hashPassword } = require("../../auth/password");
-const { badRequest, notFound, conflict } = require("../http");
+const { HttpError, badRequest, notFound, conflict } = require("../http");
 const { requireRole } = require("../session");
 const { getStudio, assertServicesExist } = require("../availability");
 const { bookingSelect, masterServiceIds } = require("../sql");
@@ -13,7 +13,77 @@ const mappers = require("../mappers");
 
 const BOOKING_STATUSES = ["pending", "confirmed", "cancelled", "completed", "no_show"];
 
+function studioView(studio) {
+  return {
+    id: studio.id,
+    name: studio.name,
+    address: studio.address,
+    phone: studio.phone,
+    timezone: studio.timezone,
+    currency: studio.currency,
+    openingTime: studio.opening_time,
+    closingTime: studio.closing_time,
+    slotStepMinutes: studio.slot_step_minutes,
+    holdTtlMinutes: studio.hold_ttl_minutes,
+  };
+}
+
 function register(router) {
+  router.get("/api/admin/studio", async (ctx) => {
+    requireRole(ctx, "admin");
+    const studio = getStudio();
+    if (!studio) throw notFound("Настройки студии не заданы");
+    return { studio: studioView(studio) };
+  });
+
+  router.patch("/api/admin/studio", async (ctx) => {
+    requireRole(ctx, "admin");
+    const db = getDb();
+    const studio = getStudio();
+    if (!studio) throw notFound("Настройки студии не заданы");
+
+    const body = ctx.body || {};
+    const timezone =
+      body.timezone === undefined ? studio.timezone : v.string(body.timezone, "timezone", { max: 64 });
+    const currency =
+      body.currency === undefined
+        ? studio.currency
+        : v.string(body.currency, "currency", { min: 3, max: 3 }).toUpperCase();
+    const openingTime =
+      body.openingTime === undefined
+        ? studio.opening_time
+        : v.timeHHMM(body.openingTime, "openingTime");
+    const closingTime =
+      body.closingTime === undefined
+        ? studio.closing_time
+        : v.timeHHMM(body.closingTime, "closingTime");
+    const slotStepMinutes =
+      body.slotStepMinutes === undefined
+        ? studio.slot_step_minutes
+        : v.int(body.slotStepMinutes, "slotStepMinutes", { min: 5, max: 240 });
+    const holdTtlMinutes =
+      body.holdTtlMinutes === undefined
+        ? studio.hold_ttl_minutes
+        : v.int(body.holdTtlMinutes, "holdTtlMinutes", { min: 1, max: 120 });
+
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+    } catch (error) {
+      throw badRequest('Поле "timezone" содержит неизвестный часовой пояс');
+    }
+    if (openingTime >= closingTime) {
+      throw badRequest("Время открытия должно быть раньше времени закрытия");
+    }
+
+    db.prepare(
+      "UPDATE studios SET timezone = ?, currency = ?, opening_time = ?, closing_time = ?, " +
+        "slot_step_minutes = ?, hold_ttl_minutes = ?, " +
+        "updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?"
+    ).run(timezone, currency, openingTime, closingTime, slotStepMinutes, holdTtlMinutes, studio.id);
+
+    return { studio: studioView(getStudio()) };
+  });
+
   router.get("/api/admin/bookings", async (ctx) => {
     requireRole(ctx, "admin");
     const db = getDb();
@@ -183,23 +253,34 @@ function register(router) {
     const serviceIds = body.serviceIds === undefined ? [] : v.ids(body.serviceIds, "serviceIds", { max: 50 });
 
     const db = getDb();
-    let userId = null;
-    if (body.userEmail !== undefined) {
-      const userEmail = v.email(body.userEmail, "userEmail");
-      const userPassword = v.password(body.userPassword, "userPassword");
-      if (db.prepare("SELECT id FROM users WHERE email = ?").get(userEmail)) {
-        throw conflict("Пользователь с таким email уже существует");
-      }
-      const info = db
-        .prepare("INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, 'master', 1)")
-        .run(userEmail, hashPassword(userPassword));
-      userId = Number(info.lastInsertRowid);
-    }
 
+    // Проверяем услуги ДО любых вставок, чтобы не создавать «осиротевший» аккаунт.
     if (serviceIds.length) assertServicesExist(serviceIds);
+
+    // Аккаунт (если нужен), профиль мастера и связи с услугами создаём в ОДНОЙ
+    // транзакции: при любой ошибке откатывается всё, а не остаётся аккаунт без
+    // профиля или профиль без аккаунта.
+    let userId = null;
+    let userEmail = null;
+    let userPassword = null;
+    if (body.userEmail !== undefined) {
+      userEmail = v.email(body.userEmail, "userEmail");
+      userPassword = v.password(body.userPassword, "userPassword");
+    }
 
     db.exec("BEGIN");
     try {
+      if (userEmail !== null) {
+        if (db.prepare("SELECT id FROM users WHERE email = ?").get(userEmail)) {
+          throw conflict("Пользователь с таким email уже существует");
+        }
+        const info = db
+          .prepare("INSERT INTO users (email, password_hash, is_active) VALUES (?, ?, 1)")
+          .run(userEmail, hashPassword(userPassword));
+        userId = Number(info.lastInsertRowid);
+        db.prepare("INSERT INTO user_roles (user_id, role) VALUES (?, 'master')").run(userId);
+      }
+
       const info = db
         .prepare(
           "INSERT INTO masters (user_id, full_name, title, bio, avatar_url, is_active) VALUES (?, ?, ?, ?, ?, ?)"
@@ -219,6 +300,7 @@ function register(router) {
       return { master: mappers.master(row, serviceIds) };
     } catch (error) {
       db.exec("ROLLBACK");
+      if (error instanceof HttpError) throw error;
       if (String(error.message || "").includes("UNIQUE")) {
         throw conflict("Профиль мастера для этого аккаунта уже существует");
       }

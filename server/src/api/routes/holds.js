@@ -1,20 +1,27 @@
 "use strict";
 
-const config = require("../../config");
-const { notFound, conflict } = require("../http");
+const { notFound, conflict, forbidden } = require("../http");
+const { requireAuth, hasRole } = require("../session");
 const {
   getActiveMaster,
   resolveServices,
   assertMasterProvides,
   isIntervalFree,
   studioTimezone,
+  studioHoldTtl,
 } = require("../availability");
 const holds = require("../holds");
 const time = require("../time");
 const v = require("../validate");
 
+function assertOwnership(user, hold) {
+  if (hasRole(user, "admin")) return;
+  if (hold.userId !== user.id) throw forbidden("Нет доступа к этому удержанию");
+}
+
 function register(router) {
   router.post("/api/holds", async (ctx) => {
+    const user = requireAuth(ctx);
     holds.cleanupExpiredHolds();
 
     const body = ctx.body || {};
@@ -41,6 +48,7 @@ function register(router) {
       durationMin: selection.durationMin,
       priceMinor: selection.priceMinor,
       currency: selection.currency,
+      userId: user.id,
     });
 
     ctx.status = 201;
@@ -54,13 +62,15 @@ function register(router) {
       priceMinor: hold.priceMinor,
       currency: hold.currency,
       expiresAt: hold.expiresAt,
-      ttlSeconds: config.holdTtlMinutes * 60,
+      ttlSeconds: studioHoldTtl() * 60,
     };
   });
 
   router.get("/api/holds/:id", async (ctx) => {
+    const user = requireAuth(ctx);
     const hold = holds.getHold(ctx.params.id);
     if (!hold) throw notFound("Удержание не найдено или истекло");
+    assertOwnership(user, hold);
     return {
       holdId: hold.id,
       masterId: hold.masterId,
@@ -73,8 +83,11 @@ function register(router) {
   });
 
   router.delete("/api/holds/:id", async (ctx) => {
-    const changes = holds.releaseHold(ctx.params.id);
-    if (changes === 0) throw notFound("Удержание не найдено");
+    const user = requireAuth(ctx);
+    const hold = holds.getHold(ctx.params.id);
+    if (!hold) throw notFound("Удержание не найдено");
+    assertOwnership(user, hold);
+    holds.releaseHold(ctx.params.id);
     return { holdId: ctx.params.id, released: true };
   });
 }

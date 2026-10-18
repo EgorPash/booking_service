@@ -31,24 +31,41 @@ function conflict(message, details) {
   return new HttpError(409, "conflict", message, details);
 }
 
-function sendJson(res, status, body) {
+function sendJson(res, status, body, headers) {
   const text = JSON.stringify(body === undefined ? null : body);
-  res.writeHead(status, {
+  const base = {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(text),
-  });
+  };
+  res.writeHead(status, Object.assign(base, headers || {}));
   res.end(text);
 }
 
+/**
+ * Отдаёт ошибку наружу.
+ *
+ * Наружу попадают сообщения ТОЛЬКО наших HttpError (они безопасны). Любая
+ * неожиданная ошибка (в том числе текст ошибки СУБД и пути к файлам)
+ * превращается в обезличенный 500 — подробности пишем только в лог сервера.
+ */
 function sendError(res, error) {
-  const status = Number.isInteger(error.status) ? error.status : 500;
+  const known = error instanceof HttpError && Number.isInteger(error.status);
+  const status = known ? error.status : 500;
   const payload = {
-    error: error.code || "internal_error",
-    message: status === 500 ? "Внутренняя ошибка сервера" : error.message,
+    error: known ? error.code || "error" : "internal_error",
+    message: known ? error.message : "Внутренняя ошибка сервера",
   };
-  if (error.details !== undefined) payload.details = error.details;
-  if (status === 500) console.error(error);
-  sendJson(res, status, payload);
+  if (known && error.details !== undefined) payload.details = error.details;
+
+  if (!known) {
+    console.error("[request error]", (error && error.stack) || error);
+  }
+
+  const headers = {};
+  if (known && Number.isFinite(error.retryAfter)) {
+    headers["Retry-After"] = String(error.retryAfter);
+  }
+  sendJson(res, status, payload, headers);
 }
 
 function parseCookies(header) {

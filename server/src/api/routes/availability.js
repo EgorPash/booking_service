@@ -1,6 +1,5 @@
 "use strict";
 
-const config = require("../../config");
 const {
   getActiveMaster,
   resolveServices,
@@ -23,7 +22,6 @@ function register(router) {
       masterId,
       date,
       durationMin: selection.durationMin,
-      stepMin: config.slotStepMinutes,
     });
 
     return {

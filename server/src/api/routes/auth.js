@@ -3,22 +3,37 @@
 const { getDb } = require("../../db/connection");
 const { hashPassword, verifyPassword } = require("../../auth/password");
 const { HttpError, conflict, forbidden } = require("../http");
-const { createToken, sessionCookie, clearSessionCookie, requireAuth } = require("../session");
+const {
+  createSession,
+  destroySession,
+  readToken,
+  sessionCookie,
+  clearSessionCookie,
+  requireAuth,
+  hasRole,
+  rolesOfUser,
+} = require("../session");
+const { rateLimit } = require("../rate-limit");
 const v = require("../validate");
 
-function publicUser(row) {
-  return { id: row.id, email: row.email, role: row.role };
+// Заглушечный хеш для выравнивания времени ответа: если аккаунта с таким email
+// нет, всё равно считаем scrypt, чтобы нельзя было узнать существование логина
+// по времени ответа (user enumeration через тайминг).
+const DUMMY_HASH = hashPassword("timing-equalizer-not-a-real-password");
+
+function publicUser(user) {
+  return { id: user.id, email: user.email, roles: user.roles };
 }
 
 function links(user) {
   const db = getDb();
   let masterId = null;
   let clientId = null;
-  if (user.role === "master") {
+  if (hasRole(user, "master")) {
     const master = db.prepare("SELECT id FROM masters WHERE user_id = ?").get(user.id);
     if (master) masterId = master.id;
   }
-  if (user.role === "client") {
+  if (hasRole(user, "client")) {
     const client = db.prepare("SELECT id FROM clients WHERE email = ?").get(user.email);
     if (client) clientId = client.id;
   }
@@ -27,6 +42,8 @@ function links(user) {
 
 function register(router) {
   router.post("/api/auth/register", async (ctx) => {
+    rateLimit(ctx, "register");
+
     const body = ctx.body || {};
     const email = v.email(body.email);
     const password = v.password(body.password);
@@ -38,29 +55,39 @@ function register(router) {
       throw conflict("Пользователь с таким email уже зарегистрирован");
     }
 
-    db.prepare(
-      "INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?) " +
-        "ON CONFLICT(phone) DO UPDATE SET full_name = excluded.full_name, " +
-        "email = excluded.email, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now')"
-    ).run(fullName, phone, email);
-    const client = db
-      .prepare("SELECT id, full_name, phone FROM clients WHERE phone = ?")
-      .get(phone);
-
-    let info;
+    db.exec("BEGIN IMMEDIATE");
+    let user;
+    let client;
     try {
-      info = db
-        .prepare("INSERT INTO users (email, password_hash, role, is_active) VALUES (?, ?, 'client', 1)")
+      // Профиль клиента создаём только если такого телефона ещё нет. Существующую
+      // запись НЕ трогаем: иначе регистрацией на чужой телефон можно было бы
+      // переписать email чужого профиля и получить доступ к его записям.
+      db.prepare(
+        "INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?) " +
+          "ON CONFLICT(phone) DO NOTHING"
+      ).run(fullName, phone, email);
+      client = db.prepare("SELECT id, full_name, phone FROM clients WHERE phone = ?").get(phone);
+
+      const info = db
+        .prepare("INSERT INTO users (email, password_hash, is_active) VALUES (?, ?, 1)")
         .run(email, hashPassword(password));
+      const userId = Number(info.lastInsertRowid);
+      // Новый аккаунт через публичную регистрацию получает единственную роль — client.
+      db.prepare("INSERT INTO user_roles (user_id, role) VALUES (?, 'client')").run(userId);
+
+      user = { id: userId, email, roles: ["client"] };
+      db.exec("COMMIT");
     } catch (error) {
-      throw conflict("Пользователь с таким email уже зарегистрирован");
+      db.exec("ROLLBACK");
+      // Ожидаемая гонка — тот же email вставили параллельно. Остальные ошибки
+      // (сбой БД и т. п.) не маскируем под «email занят», а пробрасываем дальше.
+      if (String((error && error.message) || "").includes("UNIQUE")) {
+        throw conflict("Пользователь с таким email уже зарегистрирован");
+      }
+      throw error;
     }
 
-    const user = db
-      .prepare("SELECT id, email, role FROM users WHERE id = ?")
-      .get(Number(info.lastInsertRowid));
-
-    ctx.res.setHeader("Set-Cookie", sessionCookie(createToken(user)));
+    ctx.res.setHeader("Set-Cookie", sessionCookie(createSession(user.id)));
     ctx.status = 201;
     return {
       user: publicUser(user),
@@ -69,22 +96,32 @@ function register(router) {
   });
 
   router.post("/api/auth/login", async (ctx) => {
+    rateLimit(ctx, "login");
+
     const body = ctx.body || {};
     const email = v.email(body.email);
     const password = v.string(body.password, "password", { min: 1, max: 200, trim: false });
 
     const db = getDb();
-    const row = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-    if (!row || !verifyPassword(password, row.password_hash)) {
+    const row = db
+      .prepare("SELECT id, email, password_hash, is_active FROM users WHERE email = ?")
+      .get(email);
+
+    // Всегда считаем scrypt: для отсутствующего аккаунта — против заглушки,
+    // чтобы время ответа не выдавало, зарегистрирован email или нет.
+    const passwordOk = verifyPassword(password, row ? row.password_hash : DUMMY_HASH);
+    if (!row || !passwordOk) {
       throw new HttpError(401, "invalid_credentials", "Неверный email или пароль");
     }
     if (row.is_active !== 1) throw forbidden("Аккаунт заблокирован");
 
-    ctx.res.setHeader("Set-Cookie", sessionCookie(createToken(row)));
-    return { user: publicUser(row) };
+    const user = { id: row.id, email: row.email, roles: rolesOfUser(row.id) };
+    ctx.res.setHeader("Set-Cookie", sessionCookie(createSession(user.id)));
+    return { user: publicUser(user) };
   });
 
   router.post("/api/auth/logout", async (ctx) => {
+    destroySession(readToken(ctx.req));
     ctx.res.setHeader("Set-Cookie", clearSessionCookie());
     return { ok: true };
   });

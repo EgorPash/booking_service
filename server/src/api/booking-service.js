@@ -28,6 +28,7 @@ const {
   studioTimezone,
 } = require("./availability");
 const { bookingSelect } = require("./sql");
+const { hasRole } = require("./session");
 const holds = require("./holds");
 const time = require("./time");
 const v = require("./validate");
@@ -40,14 +41,30 @@ function isActive(booking) {
   return ACTIVE_STATUSES.includes(booking.status);
 }
 
+/**
+ * Роли читаем из БД (их может быть несколько). Приоритет прав:
+ * admin > master > client — если у человека несколько ролей, действуют
+ * самые широкие. «Только клиент» — это роль client без admin и master.
+ */
+function canChooseClient(user) {
+  return hasRole(user, "admin") || hasRole(user, "master");
+}
+
+function isClientOnly(user) {
+  return hasRole(user, "client") && !canChooseClient(user);
+}
+
 function resolveAllowOverlap(user, body) {
-  if (user.role !== "admin") return false;
+  if (!hasRole(user, "admin")) return false;
   if (body.allowOverlap === undefined) return false;
   return v.bool(body.allowOverlap, "allowOverlap");
 }
 
 function resolveMasterId(db, user, body) {
-  if (user.role === "master") {
+  if (hasRole(user, "admin")) {
+    return v.int(body.masterId, "masterId", { min: 1 });
+  }
+  if (hasRole(user, "master")) {
     const own = db.prepare("SELECT id FROM masters WHERE user_id = ?").get(user.id);
     if (!own) throw forbidden("У профиля мастера нет записи в базе");
     if (body.masterId !== undefined && v.int(body.masterId, "masterId", { min: 1 }) !== own.id) {
@@ -59,7 +76,7 @@ function resolveMasterId(db, user, body) {
 }
 
 function resolveClientProfile(db, user, body) {
-  if (user.role === "client") {
+  if (isClientOnly(user)) {
     const own = db
       .prepare("SELECT id, full_name, phone, email FROM clients WHERE email = ?")
       .get(user.email);
@@ -67,7 +84,7 @@ function resolveClientProfile(db, user, body) {
   }
 
   if (body.clientId !== undefined) {
-    if (user.role === "client") throw forbidden("Клиент не может выбрать другого клиента");
+    if (isClientOnly(user)) throw forbidden("Клиент не может выбрать другого клиента");
     const id = v.int(body.clientId, "clientId", { min: 1 });
     const row = db.prepare("SELECT id, full_name, phone, email FROM clients WHERE id = ?").get(id);
     if (!row) throw notFound("Клиент не найден");
@@ -80,7 +97,7 @@ function resolveClientProfile(db, user, body) {
     "INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?) " +
       "ON CONFLICT(phone) DO UPDATE SET full_name = excluded.full_name, " +
       "updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now')"
-  ).run(fullName, phone, user.role === "client" ? user.email : null);
+  ).run(fullName, phone, isClientOnly(user) ? user.email : null);
   return db.prepare("SELECT id, full_name, phone, email FROM clients WHERE phone = ?").get(phone);
 }
 
@@ -110,12 +127,12 @@ function getBookingOrThrow(db, id) {
 }
 
 function assertBookingAccess(db, user, row) {
-  if (user.role === "admin") return;
-  if (user.role === "master") {
+  if (hasRole(user, "admin")) return;
+  if (hasRole(user, "master")) {
     const master = db.prepare("SELECT id FROM masters WHERE user_id = ?").get(user.id);
     if (master && master.id === row.master_id) return;
   }
-  if (user.role === "client") {
+  if (hasRole(user, "client")) {
     const client = db.prepare("SELECT id FROM clients WHERE email = ?").get(user.email);
     if (client && client.id === row.client_id) return;
   }
@@ -151,7 +168,7 @@ function createBookings(user, body) {
   const allowOverlap = resolveAllowOverlap(user, body);
   const masterId = resolveMasterId(db, user, body);
 
-  if (user.role === "client" && body.clientId !== undefined) {
+  if (isClientOnly(user) && body.clientId !== undefined) {
     throw forbidden("Клиент не может выбрать другого клиента");
   }
 
@@ -169,6 +186,11 @@ function createBookings(user, body) {
     if (holdToken) {
       hold = holds.getHold(holdToken);
       if (!hold) throw conflict("Удержание не найдено или истекло");
+      // Токен удержания принадлежит конкретному пользователю: чужое удержание
+      // использовать нельзя (админ — исключение).
+      if (hold.userId && hold.userId !== user.id && !hasRole(user, "admin")) {
+        throw forbidden("Это удержание принадлежит другому пользователю");
+      }
       const sameServices =
         hold.serviceIds.length === serviceIds.length &&
         hold.serviceIds.every((id) => serviceIds.includes(id));
@@ -243,7 +265,7 @@ function rescheduleBooking(user, id, body) {
   const durationMin = time.diffMinutesIso(row.starts_at, row.ends_at);
   const endsAt = time.addMinutesIso(startsAt, durationMin);
   const date = time.utcToLocal(startsAt, timeZone).date;
-  const skipOverlapCheck = user.role === "admin" && row.allow_overlap === 1;
+  const skipOverlapCheck = hasRole(user, "admin") && row.allow_overlap === 1;
 
   db.exec("BEGIN IMMEDIATE");
   try {

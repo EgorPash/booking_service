@@ -1,7 +1,7 @@
 "use strict";
 
 const { getDb } = require("../../db/connection");
-const { requireAuth } = require("../session");
+const { requireAuth, hasRole } = require("../session");
 const {
   createBookings,
   getBookingDetail,
@@ -27,9 +27,9 @@ function register(router) {
     const timeZone = studioTimezone();
 
     let rows;
-    if (user.role === "admin") {
+    if (hasRole(user, "admin")) {
       rows = db.prepare(bookingSelect("") + "ORDER BY b.starts_at DESC").all();
-    } else if (user.role === "master") {
+    } else if (hasRole(user, "master")) {
       const master = db.prepare("SELECT id FROM masters WHERE user_id = ?").get(user.id);
       if (!master) return { bookings: [] };
       rows = db
