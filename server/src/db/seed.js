@@ -21,6 +21,7 @@
  */
 
 const { getDb, closeDb } = require("./connection");
+const { insertBookingRow } = require("./bookings");
 const { assertDestructiveAllowed } = require("./guards");
 const { hashPassword } = require("../auth/password");
 
@@ -262,26 +263,23 @@ function seed() {
 
     // --- Записи (проверяем существование по мастеру и времени старта) ---
     const findBooking = db.prepare("SELECT id FROM bookings WHERE master_id = ? AND starts_at = ?");
-    const insertBooking = db.prepare(
-      "INSERT INTO bookings (client_id, master_id, service_id, starts_at, ends_at, status, price_minor, currency, comment)" +
-        " VALUES (?, ?, ?, ?, ?, ?, ?, 'RUB', ?)"
-    );
     for (const booking of BOOKINGS) {
       const masterId = masterIdByName.get(booking.master);
       const service = serviceByName.get(booking.service);
       const startsAt = toIsoUtc(workingDays[booking.dayIndex], booking.time);
       if (findBooking.get(masterId, startsAt)) continue;
 
-      insertBooking.run(
-        clientIdByPhone.get(booking.clientPhone),
+      insertBookingRow(db, {
+        clientId: clientIdByPhone.get(booking.clientPhone),
         masterId,
-        service.id,
+        serviceId: service.id,
         startsAt,
-        addMinutesIso(startsAt, service.durationMin),
-        booking.status,
-        service.priceMinor,
-        booking.comment
-      );
+        endsAt: addMinutesIso(startsAt, service.durationMin),
+        status: booking.status,
+        priceMinor: service.priceMinor,
+        currency: "RUB",
+        comment: booking.comment,
+      });
       createdBookings += 1;
     }
 

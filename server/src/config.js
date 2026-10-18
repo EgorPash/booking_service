@@ -34,6 +34,9 @@ const config = {
   databasePath: fromRoot(process.env.DATABASE_PATH || "server/data/app.sqlite"),
   sessionSecret: process.env.SESSION_SECRET || "",
   passwordHashRounds: Number(process.env.PASSWORD_HASH_ROUNDS || 12),
+  // Шаг сетки свободных слотов (минуты) и время жизни удержания слота (минуты)
+  slotStepMinutes: Number(process.env.SLOT_STEP_MINUTES || 30),
+  holdTtlMinutes: Number(process.env.HOLD_TTL_MINUTES || 10),
 };
 
 // Ошибки конфигурации лучше ловить при старте, а не в момент запроса.

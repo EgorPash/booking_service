@@ -1,39 +1,25 @@
-# === Операционная система ===
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-.DS_Store
-._*
-
-# === Редакторы и IDE ===
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-*.swp
-*.swo
-*~
-
-# === Временные файлы ===
-*.tmp
-*.temp
-*.bak
-*.orig
-*.log
-.cache/
-tmp/
-temp/
-
-# === Node / сборка (в проекте не используется, на всякий случай) ===
+# Зависимости
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-dist/
-build/
 
-# === Секреты и окружение ===
+# Переменные окружения (реальные значения — только локально)
 .env
-.env.*
-*.local
+.env.local
+.env.*.local
+
+# База данных SQLite и её служебные файлы
+server/data/*.sqlite
+server/data/*.sqlite3
+server/data/*.db
+server/data/*.sqlite-journal
+server/data/*.sqlite-wal
+server/data/*.sqlite-shm
+
+# Логи
+*.log
+npm-debug.log*
+
+# ОС / редакторы
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

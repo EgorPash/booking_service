@@ -1,0 +1,35 @@
+# ============================================================
+# Правила работы с текстовыми и бинарными файлами.
+#
+# В репозитории все текстовые файлы хранятся с переводами строк LF,
+# независимо от ОС разработчика — это убирает «шумные» диффы между
+# Windows и Linux/macOS.
+# ============================================================
+
+# Текстовые файлы: нормализация в LF при коммите
+* text=auto eol=lf
+
+# SQL-миграции и документация — всегда LF
+*.sql text eol=lf
+*.md  text eol=lf
+
+# Windows-скрипты — CRLF, иначе cmd.exe может ругаться
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Бинарные файлы (git не должен менять в них переводы строк)
+*.sqlite  binary
+*.sqlite3 binary
+*.db      binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary
+*.pdf     binary
+
+# Машинно-генерируемые файлы не показывать в git diff
+package-lock.json linguist-generated=true

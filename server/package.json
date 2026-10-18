@@ -5,8 +5,10 @@
   "description": "База бэкенда сервиса онлайн-записи Lumi Beauty Studio (Node.js + SQLite)",
   "main": "src/db/connection.js",
   "scripts": {
+    "start": "node src/api/server.js",
     "migrate": "node src/db/migrate.js",
     "seed": "node src/db/seed.js",
+    "db:recreate": "node src/db/recreate.js",
     "db:reset": "node src/db/reset.js"
   },
   "engines": {
