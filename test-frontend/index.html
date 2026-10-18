@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumi Beauty Studio — тестовый фронтенд</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <strong>Lumi Beauty Studio — тестовый фронтенд API</strong>
+    <span class="spacer"></span>
+    <span id="user-badge" class="badge hidden"></span>
+    <button id="logout-btn" class="btn hidden" type="button">Выйти</button>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-target="auth" type="button">Вход / Регистрация</button>
+    <button class="tab" data-target="catalog" type="button">Услуги и мастера</button>
+    <button class="tab" data-target="booking" type="button">Запись</button>
+    <button class="tab" data-target="cabinet" type="button">Личный кабинет</button>
+    <button class="tab hidden" data-target="admin" id="tab-admin" type="button">Админ</button>
+  </nav>
+
+  <main>
+    <div id="global-msg" class="msg hidden"></div>
+
+    <section id="section-auth" class="section active">
+      <div class="grid2">
+        <div class="card">
+          <h2>Вход</h2>
+          <form id="login-form">
+            <label>Email
+              <input name="email" type="email" autocomplete="username" required>
+            </label>
+            <label>Пароль
+              <input name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <button class="btn primary" type="submit">Войти</button>
+          </form>
+          <div class="msg hidden" id="login-msg"></div>
+        </div>
+
+        <div class="card">
+          <h2>Регистрация (роль — клиент)</h2>
+          <form id="register-form">
+            <label>Имя
+              <input name="fullName" required maxlength="120">
+            </label>
+            <label>Телефон
+              <input name="phone" placeholder="+79991234567" required>
+            </label>
+            <label>Email
+              <input name="email" type="email" required>
+            </label>
+            <label>Пароль (мин. 8 символов)
+              <input name="password" type="password" minlength="8" required>
+            </label>
+            <button class="btn primary" type="submit">Зарегистрироваться</button>
+          </form>
+          <div class="msg hidden" id="register-msg"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Текущий пользователь</h3>
+        <pre id="me-box" class="pre">не вошли</pre>
+        <p class="hint">Тестовые аккаунты из сида: admin@lumi.studio / Admin123! · master@lumi.studio / Master123! · client@lumi.studio / Client123!</p>
+      </div>
+    </section>
+
+    <section id="section-catalog" class="section">
+      <div class="row">
+        <button id="load-catalog" class="btn" type="button">Обновить</button>
+        <label>Фильтр мастеров по услуге
+          <select id="catalog-service-filter">
+            <option value="">— все —</option>
+          </select>
+        </label>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>Услуги</h2>
+          <div id="services-list"></div>
+        </div>
+        <div class="card">
+          <h2>Мастера</h2>
+          <div id="masters-list"></div>
+        </div>
+      </div>
+      <div class="msg hidden" id="catalog-msg"></div>
+    </section>
+
+    <section id="section-booking" class="section">
+      <div class="card">
+        <h2>Новая запись</h2>
+        <p class="hint">Создание записи требует входа (любая роль). Услуги можно выбирать несколько.</p>
+
+        <fieldset>
+          <legend>Услуги</legend>
+          <div id="booking-services" class="chk-grid"></div>
+        </fieldset>
+
+        <div class="row wrap">
+          <label>Мастер
+            <select id="booking-master">
+              <option value="">— выберите —</option>
+            </select>
+          </label>
+          <label>Дата
+            <input id="booking-date" type="date">
+          </label>
+          <button id="load-slots" class="btn" type="button">Показать свободное время</button>
+        </div>
+
+        <div class="row wrap">
+          <label>Комментарий
+            <input id="booking-comment" maxlength="1000" placeholder="необязательно">
+          </label>
+          <label>Имя клиента
+            <input id="booking-fullname" placeholder="нужно для мастера/админа">
+          </label>
+          <label>Телефон клиента
+            <input id="booking-phone" placeholder="+79991234567">
+          </label>
+        </div>
+
+        <div id="slots-box" class="slots-box"></div>
+        <div id="nearest-box" class="slots-box nearest"></div>
+
+        <div class="row">
+          <button id="hold-slot" class="btn" type="button" disabled>Удержать слот</button>
+          <button id="create-booking" class="btn primary" type="button" disabled>Создать запись</button>
+        </div>
+        <div class="msg hidden" id="booking-msg"></div>
+      </div>
+    </section>
+
+    <section id="section-cabinet" class="section">
+      <div class="card">
+        <div class="row">
+          <h2>Мои записи</h2>
+          <span class="spacer"></span>
+          <button id="load-my" class="btn" type="button">Обновить</button>
+        </div>
+        <div id="my-bookings"></div>
+        <div class="msg hidden" id="cabinet-msg"></div>
+      </div>
+
+      <div class="card hidden" id="detail-card">
+        <h2>Детали записи <span id="detail-id" class="badge"></span></h2>
+        <div id="booking-detail"></div>
+
+        <fieldset>
+          <legend>Перенос</legend>
+          <div class="row wrap">
+            <label>Новая дата
+              <input id="reschedule-date" type="date">
+            </label>
+            <button id="load-reschedule-slots" class="btn" type="button">Показать свободное время</button>
+            <button id="reschedule-btn" class="btn primary" type="button" disabled>Перенести на выбранное</button>
+            <button id="cancel-btn" class="btn danger" type="button">Отменить запись</button>
+          </div>
+          <div id="reschedule-slots" class="slots-box"></div>
+        </fieldset>
+        <div class="msg hidden" id="detail-msg"></div>
+      </div>
+    </section>
+
+    <section id="section-admin" class="section hidden">
+      <div class="card">
+        <h2>Все записи</h2>
+        <div class="row wrap">
+          <label>Статус
+            <select id="admin-status-filter">
+              <option value="">— любой —</option>
+              <option value="pending">pending</option>
+              <option value="confirmed">confirmed</option>
+              <option value="cancelled">cancelled</option>
+              <option value="completed">completed</option>
+              <option value="no_show">no_show</option>
+            </select>
+          </label>
+          <label>Мастер ID
+            <input id="admin-master-filter" type="number" min="1">
+          </label>
+          <label>Клиент ID
+            <input id="admin-client-filter" type="number" min="1">
+          </label>
+          <label>Дата
+            <input id="admin-date-filter" type="date">
+          </label>
+          <button id="load-admin-bookings" class="btn" type="button">Показать</button>
+        </div>
+        <div id="admin-bookings"></div>
+        <div class="msg hidden" id="admin-bookings-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Услуги</h2>
+        <form id="service-create" class="row wrap">
+          <input name="name" placeholder="Название" required maxlength="200">
+          <input name="durationMin" type="number" min="1" max="1440" placeholder="Длительность, мин" required>
+          <input name="priceMinor" type="number" min="0" placeholder="Цена, коп." required>
+          <input name="description" placeholder="Описание" maxlength="1000">
+          <label class="chk"><input name="isActive" type="checkbox" checked> активна</label>
+          <button class="btn primary" type="submit">Добавить услугу</button>
+        </form>
+        <div id="admin-services"></div>
+        <div class="msg hidden" id="admin-services-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Мастера</h2>
+        <form id="master-create" class="row wrap">
+          <input name="fullName" placeholder="Имя" required maxlength="120">
+          <input name="title" placeholder="Должность" maxlength="200">
+          <input name="userEmail" type="email" placeholder="Email аккаунта (необязательно)">
+          <input name="userPassword" type="password" placeholder="Пароль аккаунта (если email)">
+          <label>Услуги
+            <select name="serviceIds" id="master-create-services" multiple size="5"></select>
+          </label>
+          <button class="btn primary" type="submit">Добавить мастера</button>
+        </form>
+        <div id="admin-masters"></div>
+        <div class="msg hidden" id="admin-masters-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Настройки студии</h2>
+        <form id="studio-form" class="row wrap">
+          <label>Часовой пояс
+            <input name="timezone" placeholder="Europe/Moscow">
+          </label>
+          <label>Открытие
+            <input name="openingTime" placeholder="10:00">
+          </label>
+          <label>Закрытие
+            <input name="closingTime" placeholder="20:00">
+          </label>
+          <label>Шаг слотов, мин
+            <input name="slotStepMinutes" type="number" min="5" max="240">
+          </label>
+          <label>TTL удержания, мин
+            <input name="holdTtlMinutes" type="number" min="1" max="120">
+          </label>
+          <button class="btn primary" type="submit">Сохранить настройки</button>
+        </form>
+        <div class="msg hidden" id="studio-msg"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

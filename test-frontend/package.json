@@ -1,0 +1,12 @@
+{
+  "name": "booking-service-test-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Черновой тестовый фронтенд поверх API Lumi Beauty Studio (vanilla JS, без зависимостей)",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
