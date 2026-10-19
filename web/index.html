@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumi Beauty Studio — онлайн-запись</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+</head>
+<body id="top">
+
+  <header class="site-header" data-client-header></header>
+
+  <main class="container">
+
+    <section id="screen-landing" class="screen active">
+      <div class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Студия красоты в Туле</span>
+          <h1 class="hero-title">Время для себя<br>начинается здесь</h1>
+          <p class="hero-sub">
+            Выберите услугу, мастера и удобное время для записи онлайн.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="booking.html">Записаться</a>
+            <a class="btn btn-ghost" href="#services">Наши услуги</a>
+          </div>
+          <p class="hero-note">Без звонков и ожидания · подтверждение сразу</p>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="blob blob-a"></div>
+          <div class="blob blob-b"></div>
+
+          <div class="preview-chip">
+            <span class="chip-dot"></span>
+            Запись за 1 минуту
+          </div>
+        </div>
+      </div>
+
+      <section class="section" id="services">
+        <div class="section-head centered">
+          <span class="eyebrow">Услуги</span>
+          <h2 class="section-title">Выберите, что вам нужно</h2>
+        </div>
+        <div class="cards" id="services-list" aria-live="polite"></div>
+      </section>
+
+      <section class="section" id="masters">
+        <div class="section-head centered">
+          <span class="eyebrow">Мастера</span>
+          <h2 class="section-title">Команда, которой доверяют</h2>
+        </div>
+        <div class="cards" id="masters-list" aria-live="polite"></div>
+      </section>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-mark small">L</span>
+        <span id="footer-brand">Lumi Beauty Studio</span>
+      </div>
+      <p class="footer-note" id="footer-note">Загрузка…</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/landing.js"></script>
+</body>
+</html>

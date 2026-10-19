@@ -1,0 +1,202 @@
+/* =========================================================
+   web/css/auth.css — экран «Вход и регистрация».
+   База, шапка, кнопки и токены берутся из main.css и tokens.css.
+   Здесь только специфика форм авторизации.
+   ========================================================= */
+
+.auth {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 48px 0 var(--space-section);
+}
+
+.auth-head {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-head .section-title {
+  margin-bottom: 10px;
+}
+
+.auth-lead {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.98rem;
+}
+
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  padding: 28px;
+}
+
+/* ---------- Переключатель «Вход / Регистрация» ---------- */
+
+.auth-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  margin-bottom: 22px;
+}
+
+.auth-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.auth-tab:hover {
+  color: var(--text);
+}
+
+.auth-tab.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: var(--shadow-btn);
+}
+
+.auth-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ---------- Сообщение формы ---------- */
+
+.form-message {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: var(--radius-inner);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.form-message.is-error {
+  border: 1px solid var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.form-message.is-success {
+  border: 1px solid var(--success);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+/* ---------- Поля ---------- */
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: block;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.field-input {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 0.97rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  padding: 12px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.field-input:hover {
+  border-color: var(--border-strong);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-ring);
+}
+
+.field.has-error .field-input {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+.field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--danger);
+}
+
+/* ---------- Действия ---------- */
+
+.auth-submit {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.auth-session {
+  text-align: center;
+}
+
+.auth-session .eyebrow {
+  background: var(--success-soft);
+  color: var(--success);
+  margin-bottom: 12px;
+}
+
+.auth-session .section-title {
+  margin-bottom: 10px;
+}
+
+.auth-session .auth-actions {
+  justify-content: center;
+}
+
+@media (max-width: 560px) {
+  .auth {
+    padding-top: 28px;
+  }
+
+  .auth-card {
+    padding: 22px 18px;
+  }
+
+  .auth-actions .btn {
+    width: 100%;
+  }
+}

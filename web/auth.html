@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход и регистрация — Lumi Beauty Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+  <header class="site-header" data-client-header></header>
+
+  <main class="container">
+    <section class="auth">
+
+      <div class="auth-head">
+        <span class="eyebrow">Личный кабинет</span>
+        <h1 class="section-title">Вход и регистрация</h1>
+        <p class="auth-lead">Войдите, чтобы управлять записями, или создайте аккаунт.</p>
+      </div>
+
+      <!-- Формы входа и регистрации -->
+      <div class="auth-card" id="auth-forms">
+        <div class="auth-tabs" role="tablist" aria-label="Вход или регистрация">
+          <button type="button" class="auth-tab active" data-tab="login" role="tab"
+                  aria-selected="true" id="tab-login" aria-controls="login-form">Вход</button>
+          <button type="button" class="auth-tab" data-tab="register" role="tab"
+                  aria-selected="false" id="tab-register" aria-controls="register-form">Регистрация</button>
+        </div>
+
+        <p class="form-message" id="auth-message" role="alert" hidden></p>
+
+        <form class="auth-form" id="login-form" novalidate>
+          <label class="field" data-field="email">
+            <span class="field-label">Email</span>
+            <input class="field-input" type="email" name="email" autocomplete="email"
+                   inputmode="email" placeholder="you@example.com">
+            <span class="field-error" data-error-for="email" hidden></span>
+          </label>
+
+          <label class="field" data-field="password">
+            <span class="field-label">Пароль</span>
+            <input class="field-input" type="password" name="password"
+                   autocomplete="current-password" placeholder="Минимум 8 символов">
+            <span class="field-error" data-error-for="password" hidden></span>
+          </label>
+
+          <button type="submit" class="btn btn-primary auth-submit">Войти</button>
+        </form>
+
+        <form class="auth-form" id="register-form" novalidate hidden>
+          <label class="field" data-field="fullName">
+            <span class="field-label">Имя</span>
+            <input class="field-input" type="text" name="fullName" autocomplete="name"
+                   placeholder="Как к вам обращаться">
+            <span class="field-error" data-error-for="fullName" hidden></span>
+          </label>
+
+          <label class="field" data-field="phone">
+            <span class="field-label">Телефон</span>
+            <input class="field-input" type="tel" name="phone" autocomplete="tel"
+                   inputmode="tel" placeholder="+7 900 000-00-00">
+            <span class="field-error" data-error-for="phone" hidden></span>
+          </label>
+
+          <label class="field" data-field="email">
+            <span class="field-label">Email</span>
+            <input class="field-input" type="email" name="email" autocomplete="email"
+                   inputmode="email" placeholder="you@example.com">
+            <span class="field-error" data-error-for="email" hidden></span>
+          </label>
+
+          <label class="field" data-field="password">
+            <span class="field-label">Пароль</span>
+            <input class="field-input" type="password" name="password"
+                   autocomplete="new-password" placeholder="Минимум 8 символов">
+            <span class="field-error" data-error-for="password" hidden></span>
+          </label>
+
+          <button type="submit" class="btn btn-primary auth-submit">Зарегистрироваться</button>
+        </form>
+      </div>
+
+      <!-- Уже вошёл -->
+      <div class="auth-card auth-session" id="auth-session" hidden>
+        <span class="eyebrow">Готово</span>
+        <h2 class="section-title">Вы уже вошли</h2>
+        <p class="auth-lead">Вы вошли как <strong id="session-email">—</strong>.</p>
+        <div class="auth-actions">
+          <a class="btn btn-primary" href="dashboard.html">В личный кабинет</a>
+          <button type="button" class="btn btn-ghost" id="logout-button">Выйти</button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-mark small">L</span>
+        <span>Lumi Beauty Studio</span>
+      </div>
+      <p class="footer-note">Учебный прототип · онлайн-запись</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>
