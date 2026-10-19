@@ -1,0 +1,51 @@
+/* =========================================================
+   Дизайн-токены «Lumi Beauty Studio»
+   Значения перенесены из booking-prototype/style.css (:root).
+   Правило: цвета, шрифты и размеры берём только отсюда,
+   новых значений не добавляем.
+   ========================================================= */
+
+:root {
+  /* Цвета */
+  --bg: #F8F7F4;
+  --header-bg: rgba(248, 247, 244, 0.85);
+  --surface: #FFFFFF;
+  --accent: #7C5CFC;
+  --accent-hover: #6A48F0;
+  --accent-soft: rgba(124, 92, 252, 0.10);
+  --accent-ring: rgba(124, 92, 252, 0.22);
+  --text: #25232A;
+  --text-secondary: #6F6B76;
+  --border: #ECEAE5;
+  --danger: #D95757;
+  --danger-soft: rgba(217, 87, 87, 0.10);
+  --success: #1FA97A;
+  --success-soft: rgba(31, 169, 122, 0.12);
+  --accent-2: rgba(236, 180, 255, 0.35);
+  --accent-glow: rgba(124, 92, 252, 0.22);
+  --surface-soft: #FCFBF9;
+  --border-strong: #DAD6CE;
+
+  /* Форма */
+  --radius-card: 20px;
+  --radius-inner: 12px;
+  --radius-btn: 12px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
+
+  /* Тени — мягкие */
+  --shadow-sm: 0 1px 2px rgba(37, 35, 42, 0.04),
+               0 4px 14px rgba(37, 35, 42, 0.05);
+  --shadow-md: 0 2px 6px rgba(37, 35, 42, 0.05),
+               0 14px 34px rgba(37, 35, 42, 0.07);
+  --shadow-btn: 0 6px 16px rgba(124, 92, 252, 0.30);
+  --shadow-btn-hover: 0 8px 22px rgba(124, 92, 252, 0.38);
+
+  /* Шрифт */
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Ритм отступов */
+  --space-section: 72px;
+  --header-h: 68px;
+}
