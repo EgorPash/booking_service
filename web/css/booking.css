@@ -317,6 +317,12 @@
 
 /* ---------- Итог ---------- */
 
+/* Обёртка нужна только на узких экранах: там итог и «Далее»
+   закрепляются внизу. На десктопе она не создаёт бокс. */
+.booking-footer {
+  display: contents;
+}
+
 .booking-summary {
   display: flex;
   align-items: center;
@@ -378,17 +384,97 @@
 
 /* ---------- Адаптив ---------- */
 
+@media (max-width: 720px) {
+  /* Итог и кнопки остаются внизу и не уводят содержимое под себя:
+     панель участвует в потоке, а её место в конце карточки
+     гарантирует, что последние элементы можно доскроллить. */
+  .booking-footer {
+    display: block;
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin: 20px -32px -32px;
+    padding: 12px 32px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
+    box-shadow: 0 -12px 26px -20px rgba(37, 35, 42, 0.45);
+  }
+
+  .booking-footer .booking-summary {
+    margin-top: 0;
+    padding: 10px 12px;
+    gap: 4px 10px;
+  }
+
+  .booking-footer .summary-label {
+    font-size: 0.68rem;
+  }
+
+  .booking-footer .summary-services {
+    font-size: 0.86rem;
+  }
+
+  .booking-footer .duration,
+  .booking-footer .price {
+    font-size: 0.86rem;
+  }
+
+  .booking-footer .form-hint {
+    margin: 6px 0 0;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .booking-footer .form-actions {
+    margin-top: 8px;
+  }
+}
+
 @media (max-width: 640px) {
   .stepper {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .stepper li {
-    flex: 1 1 40%;
+    min-width: 0;
+  }
+
+  .step-btn {
+    gap: 6px;
+    padding: 10px 6px;
+    font-size: 0.84rem;
+    white-space: nowrap;
+  }
+
+  .step-btn .step-index {
+    width: 22px;
+    height: 22px;
+    font-size: 0.72rem;
   }
 
   .option-grid.masters {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Крупные кнопки в две колонки — удобно попасть пальцем. */
+  .slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .slot-btn {
+    min-height: 48px;
+    padding: 12px 10px;
+    font-size: 1rem;
+  }
+
+  .form-actions .btn {
+    flex: 1;
+    padding: 12px 10px;
+    font-size: 0.9rem;
   }
 }
 
@@ -401,8 +487,27 @@
     padding: 24px 20px;
   }
 
+  .booking-footer {
+    margin-left: -20px;
+    margin-right: -20px;
+    margin-bottom: -24px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
   .option-grid.masters {
     grid-template-columns: 1fr;
+  }
+
+  .step-btn {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .summary-meta {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 
@@ -744,6 +849,6 @@
 
 @media (max-width: 560px) {
   .slot-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

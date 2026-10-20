@@ -849,3 +849,31 @@
     width: 100%;
   }
 }
+
+/* Узкий или невысокий экран: окно не выходит за пределы вьюпорта,
+   содержание прокручивается, а кнопки решения остаются видны. */
+@media (max-width: 560px), (max-height: 620px) {
+  .cancel-dialog {
+    width: min(460px, calc(100% - 24px));
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow: hidden;
+  }
+
+  .dialog-inner {
+    max-height: inherit;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 20px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .dialog-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    margin-top: 16px;
+    padding: 12px 0 2px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+}

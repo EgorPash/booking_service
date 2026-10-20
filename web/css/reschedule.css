@@ -203,6 +203,27 @@
   }
 }
 
+@media (max-width: 720px) {
+  /* Кнопки переноса всегда видны внизу экрана. Место под панель
+     зарезервировано, поэтому она не перекрывает содержимое. */
+  #reschedule-content {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  #res-form > .form-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    margin: 0;
+    padding: 12px 24px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -12px 26px -20px rgba(37, 35, 42, 0.45);
+  }
+}
+
 @media (max-width: 560px) {
   .reschedule {
     padding-top: 28px;
@@ -218,5 +239,10 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 4px;
+  }
+
+  #res-form > .form-actions {
+    padding-left: 18px;
+    padding-right: 18px;
   }
 }

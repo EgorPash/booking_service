@@ -60,6 +60,7 @@
     logo.appendChild(logoText);
 
     const nav = el("nav", "nav");
+    nav.id = "client-nav";
     nav.setAttribute("aria-label", "Основная навигация");
     LINKS.forEach(function (item) {
       const link = el("a", "nav-link", item.label);
@@ -69,11 +70,53 @@
       nav.appendChild(link);
     });
 
+    const navToggle = el("button", "nav-toggle");
+    navToggle.type = "button";
+    navToggle.setAttribute("aria-label", "Открыть меню");
+    navToggle.setAttribute("aria-controls", "client-nav");
+    navToggle.setAttribute("aria-expanded", "false");
+    for (let i = 0; i < 3; i += 1) navToggle.appendChild(el("span"));
+
     const actions = el("div", "header-actions");
     actions.id = "header-actions";
 
+    function setNav(open) {
+      mount.classList.toggle("nav-open", open);
+      navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      navToggle.setAttribute(
+        "aria-label",
+        open ? "Закрыть меню" : "Открыть меню"
+      );
+    }
+
+    navToggle.addEventListener("click", function (event) {
+      event.stopPropagation();
+      setNav(!mount.classList.contains("nav-open"));
+    });
+
+    nav.addEventListener("click", function (event) {
+      if (event.target.closest("a")) setNav(false);
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!mount.classList.contains("nav-open")) return;
+      if (mount.contains(event.target)) return;
+      setNav(false);
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && mount.classList.contains("nav-open")) {
+        setNav(false);
+      }
+    });
+
+    window.addEventListener("resize", function () {
+      if (window.innerWidth > 720) setNav(false);
+    });
+
     inner.appendChild(logo);
     inner.appendChild(nav);
+    inner.appendChild(navToggle);
     inner.appendChild(actions);
     mount.appendChild(inner);
   }

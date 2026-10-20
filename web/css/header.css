@@ -44,6 +44,95 @@
   text-overflow: ellipsis;
 }
 
+/* Кнопка меню нужна только на узких экранах. */
+.nav-toggle {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .client-header .header-inner {
+    justify-content: flex-start;
+  }
+
+  .client-header .header-actions {
+    margin-left: auto;
+  }
+
+  .client-header .nav-toggle {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .client-header .nav-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+
+  .client-header .nav-toggle span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .client-header.nav-open .nav-toggle span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .client-header.nav-open .nav-toggle span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .client-header.nav-open .nav-toggle span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .client-header .nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 10px 24px 14px;
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--bg);
+    box-shadow: var(--shadow-md);
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: calc(100vh - var(--header-h));
+  }
+
+  .client-header.nav-open .nav {
+    display: flex;
+  }
+
+  .client-header .nav-link {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border-radius: var(--radius-inner);
+  }
+}
+
 @media (max-width: 640px) {
   .client-header .header-inner {
     gap: 8px;
