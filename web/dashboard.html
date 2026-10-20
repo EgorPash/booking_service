@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Личный кабинет — Lumi Beauty Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+  <header class="site-header" data-client-header></header>
+
+  <main class="container">
+    <section class="cabinet">
+      <div class="cabinet-head">
+        <div>
+          <span class="eyebrow">Личный кабинет</span>
+          <h1 class="section-title">Мои записи</h1>
+          <p class="screen-sub">Активные визиты и история — всё в одном месте.</p>
+        </div>
+        <a class="btn btn-primary" href="booking.html">Записаться</a>
+      </div>
+
+      <div class="cabinet-toolbar">
+        <div class="cabinet-tabs" role="tablist" aria-label="Мои записи">
+          <button type="button" class="cabinet-tab is-active" id="tab-active"
+                  data-tab="active" role="tab" aria-selected="true"
+                  aria-controls="bookings-panel">
+            Активные <span class="tab-count" id="active-count">0</span>
+          </button>
+          <button type="button" class="cabinet-tab" id="tab-history"
+                  data-tab="history" role="tab" aria-selected="false"
+                  aria-controls="bookings-panel">
+            История <span class="tab-count" id="history-count">0</span>
+          </button>
+        </div>
+        <p class="cabinet-note" id="cabinet-note" role="status"></p>
+      </div>
+
+      <div class="cabinet-message" id="cabinet-message" role="status" hidden></div>
+
+      <div class="cabinet-list" id="cabinet-loading" aria-hidden="true">
+        <div class="booking-tile is-skeleton">
+          <span class="skeleton booking-date-skeleton"></span>
+          <span class="booking-skeleton-main">
+            <span class="skeleton skeleton-line"></span>
+            <span class="skeleton skeleton-line short"></span>
+            <span class="skeleton skeleton-line"></span>
+          </span>
+        </div>
+        <div class="booking-tile is-skeleton">
+          <span class="skeleton booking-date-skeleton"></span>
+          <span class="booking-skeleton-main">
+            <span class="skeleton skeleton-line"></span>
+            <span class="skeleton skeleton-line short"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="cabinet-list" id="bookings-panel" role="tabpanel"
+           aria-labelledby="tab-active" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-mark small">L</span>
+        <span>Lumi Beauty Studio</span>
+      </div>
+      <p class="footer-note">Учебный прототип · онлайн-запись</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/booking-time.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/cabinet.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

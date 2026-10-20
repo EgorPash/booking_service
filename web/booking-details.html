@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Детали записи — Lumi Beauty Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+  <header class="site-header" data-client-header></header>
+
+  <main class="container">
+    <section class="details">
+      <a class="back-link" href="dashboard.html">← Мои записи</a>
+
+      <div class="details-message" id="details-message" role="status" hidden></div>
+
+      <div class="detail-card" id="details-loading" aria-hidden="true">
+        <span class="skeleton skeleton-line short"></span>
+        <span class="skeleton skeleton-line"></span>
+        <span class="skeleton skeleton-line"></span>
+        <span class="skeleton skeleton-line short"></span>
+      </div>
+
+      <article class="detail-card" id="details-content" hidden>
+        <div class="detail-head">
+          <div>
+            <span class="detail-number" id="detail-number">Запись</span>
+            <h1 class="detail-title" id="detail-service">—</h1>
+            <p class="detail-master" id="detail-master">—</p>
+          </div>
+          <span class="status-badge" id="detail-status">—</span>
+        </div>
+
+        <div class="detail-warning" id="detail-late-warning" hidden>
+          До визита осталось меньше 2 часов. Отмена возможна, но, пожалуйста,
+          предупредите студию — так мы сможем быстрее предложить время другому клиенту.
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-block">
+            <span class="detail-label">Дата</span>
+            <span class="detail-value strong" id="detail-date">—</span>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Время</span>
+            <span class="detail-value strong" id="detail-time">—</span>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Длительность</span>
+            <span class="detail-value" id="detail-duration">—</span>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Стоимость</span>
+            <span class="detail-value" id="detail-price">—</span>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Клиент</span>
+            <span class="detail-value" id="detail-client">—</span>
+          </div>
+          <div class="detail-block">
+            <span class="detail-label">Телефон</span>
+            <span class="detail-value" id="detail-phone">—</span>
+          </div>
+        </div>
+
+        <div class="detail-note" id="detail-comment-row" hidden>
+          <span class="detail-label">Комментарий</span>
+          <span class="detail-value" id="detail-comment">—</span>
+        </div>
+
+        <p class="detail-inactive" id="detail-inactive" hidden></p>
+
+        <div class="detail-actions" id="detail-actions" hidden>
+          <a class="btn btn-ghost" id="detail-reschedule" href="#">Перенести</a>
+          <div class="detail-actions-right">
+            <button type="button" class="btn btn-danger" id="detail-cancel">
+              Отменить запись
+            </button>
+          </div>
+        </div>
+
+        <p class="detail-policy">
+          Отменить или перенести запись можно до начала визита. Отмена освобождает
+          время для других клиентов; если до визита меньше 2 часов, предупредите студию.
+        </p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-mark small">L</span>
+        <span>Lumi Beauty Studio</span>
+      </div>
+      <p class="footer-note">Учебный прототип · онлайн-запись</p>
+    </div>
+  </footer>
+
+  <dialog class="cancel-dialog" id="cancel-dialog" aria-labelledby="cancel-title">
+    <div class="dialog-inner">
+      <button type="button" class="dialog-close" id="cancel-close" aria-label="Закрыть">×</button>
+      <h2 class="dialog-title" id="cancel-title">Отменить запись?</h2>
+      <p class="dialog-text">
+        Отмена освободит выбранное время. Пожалуйста, отменяйте запись заранее —
+        лучше не позднее чем за 2 часа до визита.
+      </p>
+
+      <div class="dialog-warning" id="dialog-warning" hidden>
+        До визита меньше 2 часов. Вы можете отменить запись, но предупредите студию.
+      </div>
+
+      <div class="dialog-summary" id="dialog-summary"></div>
+
+      <p class="dialog-error" id="dialog-error" role="alert" hidden></p>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-dismiss">Не отменять</button>
+        <button type="button" class="btn btn-danger" id="cancel-confirm">Отменить запись</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/booking-time.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/cabinet.js"></script>
+  <script src="js/booking-details.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Запись оформлена — Lumi Beauty Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/success.css">
+</head>
+<body>
+
+  <header class="site-header" data-client-header></header>
+
+  <main class="container">
+    <section class="success">
+      <div class="success-card">
+        <div class="success-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+               stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+        </div>
+
+        <span class="eyebrow">Готово</span>
+        <h1 class="section-title">Запись оформлена</h1>
+        <p class="screen-sub">Ждём вас в Lumi Beauty Studio.</p>
+        <span class="success-status" id="success-status" hidden>—</span>
+
+        <div class="success-summary">
+          <div class="success-head">
+            <span class="success-head-label">Услуги и цены</span>
+            <span class="success-number" id="success-number"></span>
+          </div>
+
+          <ul class="success-services" id="success-services"></ul>
+
+          <div class="success-grid">
+            <div class="success-item">
+              <span class="success-label">Мастер</span>
+              <span class="success-value" id="success-master">—</span>
+            </div>
+            <div class="success-item">
+              <span class="success-label">Дата</span>
+              <span class="success-value" id="success-date">—</span>
+            </div>
+            <div class="success-item">
+              <span class="success-label">Время</span>
+              <span class="success-value" id="success-time">—</span>
+            </div>
+          </div>
+
+          <div class="success-total">
+            <span class="duration" id="success-duration">—</span>
+            <strong id="success-total">—</strong>
+          </div>
+
+          <div class="success-client" id="success-client-row" hidden>
+            <span class="success-label">Клиент</span>
+            <span class="success-value" id="success-client">—</span>
+          </div>
+        </div>
+
+        <p class="form-message" id="success-note" hidden></p>
+
+        <div class="form-actions success-actions">
+          <a class="btn btn-primary" id="success-home" href="index.html">На главную</a>
+          <button type="button" class="btn btn-ghost" id="success-again">Записаться ещё</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-mark small">L</span>
+        <span>Lumi Beauty Studio</span>
+      </div>
+      <p class="footer-note">Учебный прототип · онлайн-запись</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/booking-time.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/success.js"></script>
+</body>
+</html>

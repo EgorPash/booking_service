@@ -1,0 +1,851 @@
+/* =========================================================
+   web/css/dashboard.css — личный кабинет и детали записи.
+   Базовые стили, шапка, кнопки и токены берутся из
+   main.css, header.css и tokens.css.
+   ========================================================= */
+
+/* ---------- Общий каркас ---------- */
+
+.cabinet,
+.details {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 0 var(--space-section);
+}
+
+.details {
+  max-width: 780px;
+}
+
+.cabinet-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+
+.cabinet-head .screen-sub {
+  margin: 10px 0 0;
+}
+
+.cabinet-head .btn {
+  flex-shrink: 0;
+}
+
+/* ---------- Вкладки ---------- */
+
+.cabinet-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.cabinet-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-sm);
+}
+
+.cabinet-tab {
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 9px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.cabinet-tab:hover {
+  color: var(--text);
+}
+
+.cabinet-tab.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.cabinet-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.tab-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cabinet-tab.is-active .tab-count {
+  background: var(--accent);
+  color: #fff;
+}
+
+.cabinet-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+/* ---------- Сообщения ---------- */
+
+.cabinet-message,
+.details-message,
+.reschedule-message {
+  margin: 0 0 18px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.cabinet-message.is-error,
+.details-message.is-error,
+.reschedule-message.is-error {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.cabinet-message.is-success,
+.details-message.is-success,
+.reschedule-message.is-success {
+  border-color: var(--success);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.cabinet-retry {
+  margin-left: 10px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+}
+
+/* ---------- Список записей ---------- */
+
+.cabinet-list {
+  display: grid;
+  gap: 14px;
+}
+
+.booking-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease,
+              transform 0.18s ease;
+}
+
+.booking-tile:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.booking-tile:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-ring);
+}
+
+.booking-tile.is-nearest {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface) 38%);
+  box-shadow: 0 0 0 1px var(--accent-soft), var(--shadow-md);
+}
+
+.booking-tile.is-history {
+  background: var(--surface-soft);
+}
+
+.booking-date {
+  width: 78px;
+  height: 78px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.is-history .booking-date {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.booking-date-day {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.booking-date-month {
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.booking-main,
+.booking-service,
+.booking-master {
+  display: block;
+}
+
+.booking-main {
+  min-width: 0;
+}
+
+.nearest-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nearest-flag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.booking-service {
+  margin: 0;
+  font-size: 1.06rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.is-history .booking-service {
+  color: var(--text-secondary);
+}
+
+.booking-master {
+  margin: 3px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.booking-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
+.booking-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.booking-meta-item::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.booking-meta-item:first-child::before {
+  display: none;
+}
+
+.booking-meta strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.booking-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 9px;
+  min-width: 142px;
+  text-align: right;
+}
+
+.booking-price {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.booking-open {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.is-history .booking-open {
+  color: var(--text-secondary);
+}
+
+/* ---------- Статусы ---------- */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.status-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-badge.is-pending {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+.status-badge.is-confirmed {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: transparent;
+}
+
+.status-badge.is-cancelled {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+
+.status-badge.is-completed {
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.status-badge.is-no-show {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+
+/* ---------- Скелетоны ---------- */
+
+.booking-tile.is-skeleton {
+  pointer-events: none;
+}
+
+.booking-date-skeleton {
+  width: 78px;
+  height: 78px;
+  border-radius: 16px;
+}
+
+.booking-skeleton-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.booking-tile.is-skeleton .skeleton-line {
+  width: 100%;
+  margin: 0;
+}
+
+.booking-tile.is-skeleton .skeleton-line.short {
+  width: 46%;
+}
+
+/* ---------- Пустое состояние ---------- */
+
+.cabinet-empty {
+  grid-column: 1 / -1;
+  padding: 54px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+}
+
+.empty-mark {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-mark::before {
+  content: "";
+  width: 24px;
+  height: 22px;
+  border: 2px solid currentColor;
+  border-radius: 5px;
+  background: linear-gradient(currentColor, currentColor) top / 100% 4px no-repeat;
+}
+
+.empty-title {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.empty-text {
+  max-width: 420px;
+  margin: 0 auto 20px;
+  color: var(--text-secondary);
+  font-size: 0.94rem;
+}
+
+/* ---------- Детали записи ---------- */
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.18s ease;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+.back-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  border-radius: var(--radius-sm);
+}
+
+.detail-card {
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+}
+
+#details-loading > .skeleton-line,
+#reschedule-loading > .skeleton-line {
+  display: block;
+}
+
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.detail-number {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.detail-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.detail-master {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.94rem;
+}
+
+.detail-warning {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-inner);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.detail-block {
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  background: var(--surface-soft);
+}
+
+.detail-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.detail-value {
+  display: block;
+  color: var(--text);
+  font-size: 0.96rem;
+  font-weight: 500;
+}
+
+.detail-value.strong {
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.detail-note {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.detail-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.detail-inactive {
+  margin: 22px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.detail-policy {
+  margin: 16px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  filter: brightness(0.94);
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- Диалог отмены ---------- */
+
+.cancel-dialog {
+  width: min(460px, calc(100% - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+}
+
+.cancel-dialog::backdrop {
+  background: rgba(37, 35, 42, 0.38);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.dialog-inner {
+  position: relative;
+  padding: 28px;
+}
+
+.dialog-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+
+.dialog-close:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.dialog-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.dialog-title {
+  margin: 0 32px 10px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.dialog-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.dialog-warning {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-inner);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.dialog-summary {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  background: var(--surface-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.dialog-summary strong {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dialog-summary span {
+  color: var(--text-secondary);
+}
+
+.dialog-error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-inner);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.dialog-actions .btn {
+  padding: 11px 18px;
+  font-size: 0.9rem;
+}
+
+/* ---------- Адаптив ---------- */
+
+@media (max-width: 720px) {
+  .booking-tile {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 14px 16px;
+    padding: 18px;
+  }
+
+  .booking-date {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+  }
+
+  .booking-date-day {
+    font-size: 1.35rem;
+  }
+
+  .booking-side {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .cabinet,
+  .details {
+    padding-top: 28px;
+  }
+
+  .cabinet-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cabinet-head .btn {
+    width: 100%;
+  }
+
+  .cabinet-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cabinet-tabs {
+    width: 100%;
+  }
+
+  .cabinet-tab {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .detail-card {
+    padding: 22px 18px;
+  }
+
+  .detail-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .detail-actions-right {
+    flex-direction: column;
+  }
+
+  .detail-actions .btn {
+    width: 100%;
+  }
+
+  .dialog-inner {
+    padding: 24px 20px;
+  }
+
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .dialog-actions .btn {
+    width: 100%;
+  }
+}

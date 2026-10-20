@@ -1,0 +1,422 @@
+/* =========================================================
+   web/css/confirm.css — экран «Подтверждение записи» (Booking 04)
+   и состояние «время заняли» (Booking 04b).
+   База, шапка, кнопки и токены — main.css и tokens.css;
+   поля формы — auth.css. Здесь только специфика экрана.
+   ========================================================= */
+
+.confirm {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px 0 var(--space-section);
+}
+
+.screen-sub {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.98rem;
+  max-width: 540px;
+}
+
+.section-head.centered .screen-sub {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.confirm-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.confirm-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ---------- Панели ---------- */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  padding: 26px;
+}
+
+.panel-title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.panel-sub {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.panel .field + .field {
+  margin-top: 14px;
+}
+
+.field-input[readonly] {
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.field-input[readonly]:hover,
+.field-input[readonly]:focus {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.field-textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+/* ---------- Таймер удержания ---------- */
+
+.hold-status {
+  padding: 16px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.slots-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.hold-banner {
+  padding: 16px 18px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-inner);
+  background: var(--accent-soft);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.hold-info {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hold-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.hold-timer {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.hold-note {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Осталось меньше минуты — заметное состояние таймера. */
+.hold-banner.is-low {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.hold-banner.is-low .hold-label,
+.hold-banner.is-low .hold-note,
+.hold-banner.is-low .hold-timer {
+  color: var(--danger);
+}
+
+.hold-banner.is-low .hold-timer {
+  animation: hold-pulse 1s ease-in-out infinite;
+}
+
+@keyframes hold-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.hold-expired {
+  padding: 16px 18px;
+  border: 1px dashed var(--danger);
+  border-radius: var(--radius-inner);
+  background: var(--danger-soft);
+}
+
+.hold-expired-text {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--danger);
+}
+
+/* ---------- Booking 04b: время заняли ---------- */
+
+.conflict-box {
+  padding: 18px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-inner);
+  background: var(--danger-soft);
+}
+
+.conflict-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.conflict-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.conflict-title {
+  margin: 0 0 2px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.conflict-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.nearest-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.nearest-chip {
+  font-family: var(--font);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nearest-chip:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.nearest-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.nearest-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.link-arrow {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.link-arrow:hover {
+  color: var(--accent-hover);
+}
+
+/* ---------- Сводка визита ---------- */
+
+.visit-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.visit-row {
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.visit-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.visit-row dt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.visit-row dd {
+  margin: 4px 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.visit-edit {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--accent);
+}
+
+.visit-edit:hover {
+  color: var(--accent-hover);
+}
+
+.visit-services {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.visit-services-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.visit-services ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.visit-services li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+
+.visit-service-name {
+  color: var(--text);
+}
+
+.visit-service-price {
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.visit-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.visit-total .duration {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.visit-total strong {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ---------- Действия ---------- */
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.confirm-actions {
+  margin-top: 2px;
+}
+
+/* ---------- Адаптив ---------- */
+
+@media (max-width: 860px) {
+  .confirm-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .confirm {
+    padding-top: 28px;
+  }
+
+  .panel {
+    padding: 22px 18px;
+  }
+
+  .confirm-actions .btn,
+  .hold-expired .btn {
+    width: 100%;
+  }
+}

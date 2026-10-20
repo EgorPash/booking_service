@@ -16,10 +16,15 @@
   if (!mount) return;
 
   // Глобальная навигация клиента: прототип (лого, «Главная», «Записаться»)
-  // + переходы личного кабинета из docs/ui-map.md (Профиль, Уведомления).
+  // + личный кабинет и переходы из docs/ui-map.md (Профиль, Уведомления).
   const LINKS = [
     { label: "Главная", href: "index.html" },
     { label: "Записаться", href: "booking.html" },
+    {
+      label: "Кабинет",
+      href: "dashboard.html",
+      activeFor: ["dashboard.html", "booking-details.html", "reschedule.html"],
+    },
     { label: "Профиль", href: "profile.html" },
     { label: "Уведомления", href: "notifications.html" },
   ];
@@ -59,7 +64,8 @@
     LINKS.forEach(function (item) {
       const link = el("a", "nav-link", item.label);
       link.href = item.href;
-      if (item.href === here) link.classList.add("active");
+      const activePages = item.activeFor || [item.href];
+      if (activePages.indexOf(here) !== -1) link.classList.add("active");
       nav.appendChild(link);
     });
 

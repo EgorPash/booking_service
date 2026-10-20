@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Запись — Lumi Beauty Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/booking.css">
+</head>
+<body>
+
+  <header class="site-header" data-client-header></header>
+
+  <main class="container">
+    <section class="booking">
+
+      <div class="section-head centered">
+        <span class="eyebrow">Онлайн-запись</span>
+        <h1 class="section-title">Новая запись</h1>
+        <p class="screen-sub">Четыре шага: услуга, мастер, дата и время.</p>
+      </div>
+
+      <!-- Индикатор шагов: 1–2 доступны, 3–4 появятся позже -->
+      <ol class="stepper" id="stepper">
+        <li>
+          <button type="button" class="step-btn" data-step="1">
+            <span class="step-index">1</span>Услуга
+          </button>
+        </li>
+        <li>
+          <button type="button" class="step-btn" data-step="2" disabled>
+            <span class="step-index">2</span>Мастер
+          </button>
+        </li>
+        <li>
+          <button type="button" class="step-btn is-future" data-step="3" disabled>
+            <span class="step-index">3</span>Дата
+          </button>
+        </li>
+        <li>
+          <button type="button" class="step-btn is-future" data-step="4" disabled>
+            <span class="step-index">4</span>Время
+          </button>
+        </li>
+      </ol>
+
+      <div class="booking-card">
+
+        <!-- Шаг 1. Услуги -->
+        <div class="booking-step" data-panel="1">
+          <div class="step-label"><span class="step-index">1</span> Услуга</div>
+          <p class="step-note">Можно выбрать несколько услуг — цена и длительность сложатся.</p>
+          <div class="option-grid services" id="services-list" aria-live="polite"></div>
+        </div>
+
+        <!-- Шаг 2. Мастер -->
+        <div class="booking-step" data-panel="2" hidden>
+          <div class="step-label"><span class="step-index">2</span> Мастер</div>
+          <p class="step-note" id="masters-note">
+            Показаны все мастера. Кто не оказывает выбранные услуги — недоступен.
+          </p>
+          <div class="option-grid masters" id="masters-list" role="listbox"
+               aria-label="Выбор мастера" aria-live="polite"></div>
+        </div>
+
+        <!-- Шаг 3. Дата -->
+        <div class="booking-step" data-panel="3" hidden>
+          <div class="step-label"><span class="step-index">3</span> Дата</div>
+          <p class="step-note">Дни со свободными окнами отмечены цветом. Прошедшие и нерабочие дни
+            видны, но недоступны.</p>
+
+          <div class="calendar">
+            <div class="calendar-head">
+              <button type="button" class="calendar-nav" id="calendar-prev"
+                      aria-label="Предыдущий месяц">&#8249;</button>
+              <span class="calendar-title" id="calendar-title">—</span>
+              <button type="button" class="calendar-nav" id="calendar-next"
+                      aria-label="Следующий месяц">&#8250;</button>
+            </div>
+            <div class="calendar-weekdays" id="calendar-weekdays"></div>
+            <div class="calendar-grid" id="calendar-grid" aria-live="polite"></div>
+          </div>
+          <p class="calendar-status" id="calendar-status" role="status" hidden></p>
+        </div>
+
+        <!-- Шаг 4. Время -->
+        <div class="booking-step" data-panel="4" hidden>
+          <div class="step-label"><span class="step-index">4</span> Время</div>
+
+          <div class="slots-loading" id="slots-loading" role="status" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            Загружаем свободное время…
+          </div>
+          <p class="slots-status" id="slots-status" role="status" hidden></p>
+
+          <div class="slots-list" id="slots-list" aria-live="polite"></div>
+
+          <p class="slots-end" id="slots-end" hidden></p>
+
+          <div class="nearest-box" id="nearest-box" hidden></div>
+        </div>
+
+        <!-- Итог по выбранным услугам -->
+        <div class="booking-summary">
+          <span class="summary-label">Итого</span>
+          <span class="summary-services" id="summary-services">Услуги не выбраны</span>
+          <span class="summary-meta">
+            <span class="duration" id="summary-duration">0 минут</span>
+            <span class="price" id="summary-price">—</span>
+          </span>
+        </div>
+
+        <p class="form-hint" id="booking-hint" role="status">Загружаем услуги…</p>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="back-button">На главную</button>
+          <button type="button" class="btn btn-primary" id="next-button" disabled>Далее</button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-mark small">L</span>
+        <span>Lumi Beauty Studio</span>
+      </div>
+      <p class="footer-note">Учебный прототип · онлайн-запись</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/booking-time.js"></script>
+  <script src="js/booking.js"></script>
+</body>
+</html>

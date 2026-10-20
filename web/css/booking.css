@@ -1,0 +1,749 @@
+/* =========================================================
+   web/css/booking.css — экран «Запись», шаги 1–2.
+   База, шапка, кнопки и токены берутся из main.css и tokens.css.
+   Разметка повторяет booking-prototype/style.css (#screen-booking),
+   добавлен индикатор шагов и мультивыбор услуг.
+   ========================================================= */
+
+.booking {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 0 var(--space-section);
+}
+
+.screen-sub {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.98rem;
+  max-width: 540px;
+}
+
+.booking .section-head.centered .screen-sub {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------- Индикатор шагов ---------- */
+
+.stepper {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  margin: 0 auto 20px;
+  padding: 0;
+  max-width: 640px;
+}
+
+.stepper li {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  padding: 10px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.step-btn .step-index {
+  background: var(--border);
+  color: var(--text-secondary);
+}
+
+.step-btn.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.step-btn.is-active .step-index {
+  background: var(--accent);
+  color: #fff;
+}
+
+.step-btn.is-done {
+  color: var(--success);
+}
+
+.step-btn.is-done .step-index {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.step-btn.is-future,
+.step-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Шаги формы ---------- */
+
+.step-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.step-index {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-note {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.booking-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  padding: 32px;
+}
+
+/* ---------- Варианты (услуги, мастера) ---------- */
+
+.option-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.option-grid.masters {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.option-btn {
+  position: relative;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  padding: 14px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.15s ease, background 0.15s ease,
+              box-shadow 0.15s ease;
+}
+
+.option-btn:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+}
+
+.option-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--accent-ring);
+}
+
+.option-btn.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.option-btn:disabled,
+.option-btn.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.option-btn:disabled:hover,
+.option-btn.is-disabled:hover {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.option-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.option-btn.selected .option-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Услуги */
+
+.service-option {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 14px 44px 14px 16px;
+  text-align: left;
+}
+
+.service-option .option-check {
+  opacity: 1;
+  transform: none;
+  top: 50%;
+  margin-top: -10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: transparent;
+}
+
+.service-option.selected .option-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.service-option-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-inner);
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.service-option-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.service-option-name {
+  font-weight: 600;
+  font-size: 0.98rem;
+}
+
+.service-option-meta {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Мастера */
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.option-btn.selected .avatar {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.option-name {
+  font-weight: 600;
+}
+
+.option-role {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.option-note {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ---------- Скелетоны шагов ---------- */
+
+.skeleton-option {
+  height: 64px;
+}
+
+.skeleton-master {
+  height: 132px;
+}
+
+/* ---------- Итог ---------- */
+
+.booking-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  background: var(--surface-soft);
+}
+
+.summary-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.summary-services {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.summary-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ---------- Подсказка и действия ---------- */
+
+.form-hint {
+  margin: 20px 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.form-hint.hint-ready {
+  color: var(--success);
+}
+
+.form-hint.is-error {
+  color: var(--danger);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* ---------- Адаптив ---------- */
+
+@media (max-width: 640px) {
+  .stepper {
+    flex-wrap: wrap;
+  }
+
+  .stepper li {
+    flex: 1 1 40%;
+  }
+
+  .option-grid.masters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .booking {
+    padding-top: 28px;
+  }
+
+  .booking-card {
+    padding: 24px 20px;
+  }
+
+  .option-grid.masters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Шаг 3. Календарь ---------- */
+
+.calendar {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  padding: 16px;
+  background: var(--surface);
+}
+
+.calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.calendar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.calendar-nav {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.calendar-nav:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+}
+
+.calendar-nav:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.calendar-nav:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-weekdays {
+  margin-bottom: 4px;
+}
+
+.calendar-weekdays span {
+  text-align: center;
+  padding: 4px 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.cal-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.cal-cell:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+}
+
+.cal-cell:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.cal-cell:disabled {
+  cursor: not-allowed;
+}
+
+.cal-cell.is-other,
+.cal-cell.is-past {
+  color: var(--text-secondary);
+  opacity: 0.4;
+}
+
+.cal-cell.is-off {
+  color: var(--text-secondary);
+  background: var(--surface-soft);
+  opacity: 0.6;
+}
+
+.cal-cell.is-full {
+  color: var(--text-secondary);
+  background: var(--surface-soft);
+  border-style: dashed;
+  border-color: var(--border);
+}
+
+.cal-cell.is-loading-day {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.cal-cell.is-free {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.cal-cell.is-today {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.cal-cell.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  opacity: 1;
+}
+
+.calendar-status {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.calendar-status.is-error {
+  color: var(--danger);
+}
+
+/* ---------- Шаг 4. Время ---------- */
+
+.slots-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.slots-status {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.slots-status.is-error,
+.nearest-hint.is-error {
+  color: var(--danger);
+}
+
+.slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.slot-group-title {
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.slot-btn {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 12px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease,
+              color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.slot-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+}
+
+.slot-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.slot-btn.is-busy {
+  color: var(--text-secondary);
+  background: var(--surface-soft);
+  border-style: dashed;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.slot-btn.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow-btn);
+}
+
+.slots-end {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+/* ---------- Состояние «нет свободного времени» (Booking 03a) ---------- */
+
+.nearest-box {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-inner);
+  background: var(--surface-soft);
+}
+
+.nearest-title {
+  margin: 0 0 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.nearest-time {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.nearest-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.nearest-slot {
+  font-family: var(--font);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nearest-slot:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.nearest-slot:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.nearest-hint {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.nearest-hints {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.nearest-hints li {
+  margin-bottom: 4px;
+}
+
+@media (max-width: 560px) {
+  .slot-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

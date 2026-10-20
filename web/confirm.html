@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Подтверждение записи — Lumi Beauty Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/confirm.css">
+</head>
+<body>
+
+  <header class="site-header" data-client-header></header>
+
+  <main class="container">
+    <section class="confirm">
+      <div class="section-head centered">
+        <span class="eyebrow">Последний шаг</span>
+        <h1 class="section-title">Подтверждение записи</h1>
+        <p class="screen-sub">Проверьте данные клиента и визита, затем подтвердите запись.</p>
+      </div>
+
+      <div class="confirm-grid">
+
+        <!-- Слева: данные клиента и действия -->
+        <div class="confirm-col">
+          <form class="panel" id="client-form" novalidate>
+            <h2 class="panel-title">Данные клиента</h2>
+            <p class="panel-sub">Имя и телефон берутся из профиля клиента.</p>
+
+            <div class="field">
+              <label class="field-label" for="client-name">Имя</label>
+              <input class="field-input" id="client-name" type="text" readonly
+                     aria-readonly="true" value="">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="client-phone">Телефон</label>
+              <input class="field-input" id="client-phone" type="tel" readonly
+                     aria-readonly="true" value="">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="client-email">Email</label>
+              <input class="field-input" id="client-email" type="email" readonly
+                     aria-readonly="true" value="">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="comment">Комментарий</label>
+              <textarea class="field-input field-textarea" id="comment" name="comment"
+                        rows="3" maxlength="1000"
+                        placeholder="Пожелания к визиту (необязательно)"></textarea>
+            </div>
+          </form>
+
+          <div class="hold-status slots-loading" id="hold-loading" role="status" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            Удерживаем выбранное время…
+          </div>
+
+          <div class="hold-banner" id="hold-banner" role="status" hidden>
+            <div class="hold-info">
+              <span class="hold-label" id="hold-label">Слот удерживается</span>
+              <span class="hold-timer" id="hold-timer">--:--</span>
+            </div>
+            <p class="hold-note" id="hold-note">Завершите оформление, пока время не истекло.</p>
+          </div>
+
+          <p class="form-message is-error" id="confirm-error" role="alert" hidden></p>
+
+          <!-- Booking 04b: время заняли -->
+          <div class="conflict-box" id="conflict" role="alert" hidden>
+            <div class="conflict-head">
+              <span class="conflict-icon" aria-hidden="true">!</span>
+              <div>
+                <h3 class="conflict-title" id="conflict-message">—</h3>
+                <p class="conflict-note" id="conflict-note">Сервер предложил ближайшие свободные варианты.</p>
+              </div>
+            </div>
+            <div class="nearest-slots" id="conflict-slots"></div>
+            <a class="link-arrow" id="conflict-choose" data-leave href="booking.html?step=4">
+              Выбрать другое время
+            </a>
+          </div>
+
+          <div class="hold-expired" id="hold-expired" role="alert" hidden>
+            <p class="hold-expired-text">Время удержания истекло. Обновите удержание или выберите другое время.</p>
+            <div class="form-actions">
+              <button type="button" class="btn btn-ghost" id="hold-refresh">Обновить удержание</button>
+              <a class="btn btn-primary" data-leave href="booking.html?step=4">Выбрать другое время</a>
+            </div>
+          </div>
+
+          <div class="form-actions confirm-actions">
+            <a class="btn btn-ghost" data-leave href="index.html">На главную</a>
+            <button type="button" class="btn btn-primary" id="confirm-submit" disabled>
+              Подтвердить запись
+            </button>
+          </div>
+        </div>
+
+        <!-- Справа: сводка визита -->
+        <aside class="confirm-col">
+          <div class="panel visit">
+            <h2 class="panel-title">Ваш визит</h2>
+
+            <dl class="visit-list">
+              <div class="visit-row">
+                <dt>Мастер
+                  <a class="visit-edit" data-leave href="booking.html?step=2">Изменить</a>
+                </dt>
+                <dd id="summary-master">—</dd>
+              </div>
+              <div class="visit-row">
+                <dt>Дата
+                  <a class="visit-edit" data-leave href="booking.html?step=3">Изменить</a>
+                </dt>
+                <dd id="summary-date">—</dd>
+              </div>
+              <div class="visit-row">
+                <dt>Время
+                  <a class="visit-edit" data-leave href="booking.html?step=4">Изменить</a>
+                </dt>
+                <dd id="summary-time">—</dd>
+              </div>
+            </dl>
+
+            <div class="visit-services">
+              <div class="visit-services-head">
+                <span>Услуги</span>
+                <a class="visit-edit" data-leave href="booking.html?step=1">Изменить</a>
+              </div>
+              <ul id="summary-services"></ul>
+            </div>
+
+            <div class="visit-total">
+              <span class="duration" id="summary-duration">—</span>
+              <strong id="summary-total">—</strong>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-mark small">L</span>
+        <span>Lumi Beauty Studio</span>
+      </div>
+      <p class="footer-note">Учебный прототип · онлайн-запись</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/booking-time.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/confirm.js"></script>
+</body>
+</html>

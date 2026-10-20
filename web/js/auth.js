@@ -12,6 +12,14 @@
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PHONE_RE = /^\+?\d{10,15}$/;
 
+  /* Куда вернуться после входа: только своя страница вида name.html.
+     Нужно экрану подтверждения, который уводит сюда неавторизованного. */
+  function nextTarget() {
+    const raw = new URLSearchParams(window.location.search).get("next");
+    if (!raw) return null;
+    return /^[a-z0-9_-]+\.html(\?[^\s#]*)?$/i.test(raw) ? raw : null;
+  }
+
   const formsCard = document.getElementById("auth-forms");
   const sessionCard = document.getElementById("auth-session");
   const sessionEmail = document.getElementById("session-email");
@@ -144,7 +152,7 @@
       setBusy(form, true);
       try {
         await action(buildPayload(readForm(form)));
-        window.location.assign("dashboard.html");
+        window.location.assign(nextTarget() || "dashboard.html");
       } catch (error) {
         setBusy(form, false);
         const field = fieldFromError(error);
@@ -207,6 +215,10 @@
   async function init() {
     try {
       const data = await window.API.getMe();
+      if (nextTarget()) {
+        window.location.assign(nextTarget());
+        return;
+      }
       showSession(data ? data.user : null);
     } catch (error) {
       showForms();

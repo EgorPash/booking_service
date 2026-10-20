@@ -96,6 +96,49 @@
       return request("/masters" + query);
     },
 
+    /* Окна мастера на дату. Отдаёт свободные окна, а если сервер
+       расширен — и всю сетку дня с отметкой available (занято/доступно). */
+    getSlots: function (masterId, params) {
+      const date = params && params.date ? params.date : "";
+      const ids = (params && params.serviceIds) || [];
+      const query =
+        "?date=" + encodeURIComponent(date) +
+        "&serviceIds=" + encodeURIComponent(ids.join(","));
+      return request("/masters/" + encodeURIComponent(masterId) + "/slots" + query);
+    },
+
+    /* Удержание слота на время оформления:
+       POST /api/holds → holdId/expiresAt/ttlSeconds,
+       GET/DELETE /api/holds/:id — проверка и освобождение. */
+    createHold: function (body) {
+      return request("/holds", { method: "POST", body: body });
+    },
+    getHold: function (id) {
+      return request("/holds/" + encodeURIComponent(id));
+    },
+    releaseHold: function (id) {
+      return request("/holds/" + encodeURIComponent(id), { method: "DELETE" });
+    },
+
+    /* Запись: создание и чтение деталей (для экрана успеха). */
+    createBooking: function (body) {
+      return request("/bookings", { method: "POST", body: body });
+    },
+    getBooking: function (id) {
+      return request("/bookings/" + encodeURIComponent(id));
+    },
+    rescheduleBooking: function (id, body) {
+      return request("/bookings/" + encodeURIComponent(id), {
+        method: "PATCH",
+        body: body,
+      });
+    },
+    cancelBooking: function (id) {
+      return request("/bookings/" + encodeURIComponent(id) + "/cancel", {
+        method: "POST",
+      });
+    },
+
     /* Авторизация. Токен сессии не читаем и не храним:
        сервер сам ставит cookie `sid` (HttpOnly) при входе. */
     getMe: function () {

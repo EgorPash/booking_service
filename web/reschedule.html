@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Перенос записи — Lumi Beauty Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/booking.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/reschedule.css">
+</head>
+<body>
+
+  <header class="site-header" data-client-header></header>
+
+  <main class="container">
+    <section class="reschedule">
+      <a class="back-link" id="res-back-link" href="dashboard.html">← Мои записи</a>
+
+      <div class="reschedule-head">
+        <span class="eyebrow">Перенос записи</span>
+        <h1 class="section-title">Выберите новое время</h1>
+        <p class="screen-sub">Услуга и мастер останутся прежними. Старое время сохранится,
+          пока вы не подтвердите перенос.</p>
+      </div>
+
+      <div class="reschedule-message" id="res-message" role="status" hidden></div>
+
+      <div class="detail-card" id="reschedule-loading" aria-hidden="true">
+        <span class="skeleton skeleton-line short"></span>
+        <span class="skeleton skeleton-line"></span>
+        <span class="skeleton skeleton-line"></span>
+      </div>
+
+      <div id="reschedule-content" hidden>
+        <div class="reschedule-summary">
+          <div class="reschedule-booking">
+            <span class="summary-label">Запись</span>
+            <strong id="res-service">—</strong>
+            <span class="reschedule-master" id="res-master">—</span>
+            <span class="reschedule-meta" id="res-meta">—</span>
+          </div>
+          <div class="current-visit">
+            <span class="current-label">Текущее время</span>
+            <strong id="res-current-date">—</strong>
+            <span id="res-current-time">—</span>
+          </div>
+        </div>
+
+        <div id="res-form">
+          <div class="reschedule-grid">
+            <div class="reschedule-panel">
+              <h2 class="reschedule-title">Новая дата</h2>
+              <p class="reschedule-note">Выберите день — покажем свободное время.</p>
+
+              <div class="calendar">
+                <div class="calendar-head">
+                  <button type="button" class="calendar-nav" id="res-cal-prev"
+                          aria-label="Предыдущий месяц">&#8249;</button>
+                  <span class="calendar-title" id="res-cal-title">—</span>
+                  <button type="button" class="calendar-nav" id="res-cal-next"
+                          aria-label="Следующий месяц">&#8250;</button>
+                </div>
+                <div class="calendar-weekdays" id="res-weekdays"></div>
+                <div class="calendar-grid" id="res-calendar" aria-live="polite"></div>
+              </div>
+              <p class="calendar-status" id="res-calendar-status" role="status" hidden></p>
+            </div>
+
+            <div class="reschedule-panel">
+              <h2 class="reschedule-title">Новое время</h2>
+
+              <div class="slots-loading" id="res-slots-loading" role="status" hidden>
+                <span class="spinner" aria-hidden="true"></span>
+                Загружаем свободное время…
+              </div>
+              <p class="slots-status" id="res-slots-status" role="status" hidden></p>
+              <div class="slots-list" id="res-slots" aria-live="polite"></div>
+
+              <div class="nearest-box" id="res-nearest" hidden></div>
+            </div>
+          </div>
+
+          <div class="reschedule-preview" id="res-preview" hidden>
+            <span class="summary-label">Новое время</span>
+            <strong id="res-preview-text">—</strong>
+            <span id="res-preview-meta">—</span>
+          </div>
+
+          <p class="form-hint" id="res-hint" role="status">Выберите дату и время.</p>
+
+          <div class="form-actions">
+            <a class="btn btn-ghost" id="res-back" href="dashboard.html">Назад</a>
+            <button type="button" class="btn btn-primary" id="res-submit" disabled>
+              Перенести запись
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <span class="logo-mark small">L</span>
+        <span>Lumi Beauty Studio</span>
+      </div>
+      <p class="footer-note">Учебный прототип · онлайн-запись</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/booking-time.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/cabinet.js"></script>
+  <script src="js/reschedule.js"></script>
+</body>
+</html>
