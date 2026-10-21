@@ -13,6 +13,66 @@ const mappers = require("../mappers");
 
 const BOOKING_STATUSES = ["pending", "confirmed", "cancelled", "completed", "no_show"];
 
+/* ---------- Проверки форм админ-раздела ----------
+   Сообщения намеренно человеческие: их показывает форма, а не разработчик. */
+
+function requiredText(value, name, messages, max) {
+  if (typeof value !== "string" || !value.trim()) {
+    throw badRequest(messages.empty);
+  }
+  if (value.trim().length > max) {
+    throw badRequest(messages.long);
+  }
+  return v.string(value, name, { max });
+}
+
+function positiveInt(value, name, messages, max) {
+  if (value === undefined || value === null || value === "") {
+    throw badRequest(messages.required);
+  }
+  const num = Number(String(value).trim());
+  if (!Number.isInteger(num)) throw badRequest(messages.integer);
+  if (num < 1) throw badRequest(messages.positive);
+  if (max !== undefined && num > max) throw badRequest(messages.tooBig);
+  return num;
+}
+
+const SERVICE_NAME_MESSAGES = {
+  empty: "Название услуги не может быть пустым",
+  long: "Название услуги слишком длинное",
+};
+
+const SERVICE_DURATION_MESSAGES = {
+  required: "Укажите длительность услуги",
+  integer: "Длительность услуги должна быть целым числом",
+  positive: "Длительность услуги должна быть больше нуля",
+  tooBig: "Длительность услуги слишком большая",
+};
+
+const SERVICE_PRICE_MESSAGES = {
+  required: "Укажите цену услуги",
+  integer: "Цена услуги должна быть целым числом",
+  positive: "Цена услуги должна быть больше нуля",
+  tooBig: "Цена услуги слишком большая",
+};
+
+const MASTER_NAME_MESSAGES = {
+  empty: "Имя мастера не может быть пустым",
+  long: "Имя мастера слишком длинное",
+};
+
+function plural(count, one, few, many) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+}
+
+function recordsWord(count) {
+  return plural(count, "запись", "записи", "записей");
+}
+
 function studioView(studio) {
   return {
     id: studio.id,
@@ -146,19 +206,33 @@ function register(router) {
     requireRole(ctx, "admin");
     const rows = getDb()
       .prepare(
-        "SELECT id, name, description, duration_min, price_minor, currency, is_active FROM services ORDER BY name"
+        "SELECT s.id, s.name, s.description, s.duration_min, s.price_minor, s.currency, s.is_active, " +
+          "(SELECT COUNT(*) FROM bookings b WHERE b.service_id = s.id) AS bookings_count, " +
+          "(SELECT COUNT(*) FROM master_services ms WHERE ms.service_id = s.id) AS masters_count " +
+          "FROM services s ORDER BY s.name"
       )
       .all();
-    return { services: rows.map(mappers.service) };
+    return {
+      services: rows.map((row) => ({
+        ...mappers.service(row),
+        bookingsCount: row.bookings_count,
+        mastersCount: row.masters_count,
+      })),
+    };
   });
 
   router.post("/api/admin/services", async (ctx) => {
     requireRole(ctx, "admin");
     const body = ctx.body || {};
-    const name = v.string(body.name, "name", { max: 200 });
+    const name = requiredText(body.name, "name", SERVICE_NAME_MESSAGES, 200);
     const description = v.optionalString(body.description, "description", { max: 1000 });
-    const durationMin = v.int(body.durationMin, "durationMin", { min: 1, max: 24 * 60 });
-    const priceMinor = v.int(body.priceMinor, "priceMinor", { min: 0 });
+    const durationMin = positiveInt(
+      body.durationMin,
+      "durationMin",
+      SERVICE_DURATION_MESSAGES,
+      24 * 60
+    );
+    const priceMinor = positiveInt(body.priceMinor, "priceMinor", SERVICE_PRICE_MESSAGES, 100000000);
     const currency = body.currency
       ? v.string(body.currency, "currency", { min: 3, max: 3 }).toUpperCase()
       : "RUB";
@@ -191,7 +265,10 @@ function register(router) {
     if (!row) throw notFound("Услуга не найдена");
 
     const body = ctx.body || {};
-    const name = body.name === undefined ? row.name : v.string(body.name, "name", { max: 200 });
+    const name =
+      body.name === undefined
+        ? row.name
+        : requiredText(body.name, "name", SERVICE_NAME_MESSAGES, 200);
     const description =
       body.description === undefined
         ? row.description
@@ -199,11 +276,11 @@ function register(router) {
     const durationMin =
       body.durationMin === undefined
         ? row.duration_min
-        : v.int(body.durationMin, "durationMin", { min: 1, max: 24 * 60 });
+        : positiveInt(body.durationMin, "durationMin", SERVICE_DURATION_MESSAGES, 24 * 60);
     const priceMinor =
       body.priceMinor === undefined
         ? row.price_minor
-        : v.int(body.priceMinor, "priceMinor", { min: 0 });
+        : positiveInt(body.priceMinor, "priceMinor", SERVICE_PRICE_MESSAGES, 100000000);
     const currency =
       body.currency === undefined
         ? row.currency
@@ -229,17 +306,46 @@ function register(router) {
     return { service: mappers.service(updated) };
   });
 
+  /* Умное удаление: если по услуге есть записи, её нельзя удалить —
+     иначе пропадёт история записей. Тогда отключаем услугу: в каталоге
+     и в форме записи она пропадает, новые записи не создаются,
+     а старые остаются со своим снимком услуги (цена и длительность). */
   router.delete("/api/admin/services/:id", async (ctx) => {
     requireRole(ctx, "admin");
     const id = v.int(ctx.params.id, "id", { min: 1 });
     const db = getDb();
-    if (!db.prepare("SELECT id FROM services WHERE id = ?").get(id)) {
-      throw notFound("Услуга не найдена");
+    const row = db.prepare("SELECT id, name FROM services WHERE id = ?").get(id);
+    if (!row) throw notFound("Услуга не найдена");
+
+    const bookingsCount = db
+      .prepare("SELECT COUNT(*) AS c FROM bookings WHERE service_id = ?")
+      .get(id).c;
+
+    if (bookingsCount === 0) {
+      db.prepare("DELETE FROM services WHERE id = ?").run(id);
+      return {
+        serviceId: id,
+        deleted: true,
+        disabled: false,
+        isActive: false,
+        bookingsCount: 0,
+        message: "Услуга «" + row.name + "» удалена: по ней не было записей.",
+      };
     }
+
     db.prepare(
       "UPDATE services SET is_active = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?"
     ).run(id);
-    return { serviceId: id, isActive: false };
+    return {
+      serviceId: id,
+      deleted: false,
+      disabled: true,
+      isActive: false,
+      bookingsCount,
+      message:
+        "Услуга «" + row.name + "» не удалена: по ней " + bookingsCount + " " +
+        recordsWord(bookingsCount) + ". Отключена — новые записи не создаются, старые остаются.",
+    };
   });
 
   router.get("/api/admin/masters", async (ctx) => {
@@ -247,22 +353,32 @@ function register(router) {
     const db = getDb();
     const rows = db
       .prepare(
-        "SELECT id, full_name, title, bio, avatar_url, is_active FROM masters ORDER BY full_name"
+        "SELECT m.id, m.full_name, m.title, m.bio, m.avatar_url, m.is_active, m.user_id, " +
+          "(SELECT COUNT(*) FROM bookings b WHERE b.master_id = m.id) AS bookings_count " +
+          "FROM masters m ORDER BY m.full_name"
       )
       .all();
     const serviceMap = masterServiceIds(db, rows.map((row) => row.id));
-    return { masters: rows.map((row) => mappers.master(row, serviceMap.get(row.id) || [])) };
+    return {
+      masters: rows.map((row) => ({
+        ...mappers.master(row, serviceMap.get(row.id) || []),
+        bookingsCount: row.bookings_count,
+      })),
+    };
   });
 
   router.post("/api/admin/masters", async (ctx) => {
     requireRole(ctx, "admin");
     const body = ctx.body || {};
-    const fullName = v.string(body.fullName, "fullName", { max: 120 });
+    const fullName = requiredText(body.fullName, "fullName", MASTER_NAME_MESSAGES, 120);
     const title = v.optionalString(body.title, "title", { max: 200 });
     const bio = v.optionalString(body.bio, "bio", { max: 2000 });
     const avatarUrl = v.optionalString(body.avatarUrl, "avatarUrl", { max: 500 });
     const isActive = body.isActive === undefined ? true : v.bool(body.isActive, "isActive");
-    const serviceIds = body.serviceIds === undefined ? [] : v.ids(body.serviceIds, "serviceIds", { max: 50 });
+    const serviceIds =
+      body.serviceIds === undefined
+        ? []
+        : v.ids(body.serviceIds, "serviceIds", { max: 50, allowEmpty: true });
 
     const db = getDb();
 
@@ -275,7 +391,8 @@ function register(router) {
     let userId = null;
     let userEmail = null;
     let userPassword = null;
-    if (body.userEmail !== undefined) {
+    // Пустая строка — это «аккаунт не нужен», а не ошибка формата.
+    if (body.userEmail !== undefined && String(body.userEmail).trim() !== "") {
       userEmail = v.email(body.userEmail, "userEmail");
       userPassword = v.password(body.userPassword, "userPassword");
     }
@@ -329,7 +446,9 @@ function register(router) {
 
     const body = ctx.body || {};
     const fullName =
-      body.fullName === undefined ? row.full_name : v.string(body.fullName, "fullName", { max: 120 });
+      body.fullName === undefined
+        ? row.full_name
+        : requiredText(body.fullName, "fullName", MASTER_NAME_MESSAGES, 120);
     const title =
       body.title === undefined ? row.title : v.optionalString(body.title, "title", { max: 200 });
     const bio = body.bio === undefined ? row.bio : v.optionalString(body.bio, "bio", { max: 2000 });
@@ -340,7 +459,9 @@ function register(router) {
     const isActive =
       body.isActive === undefined ? row.is_active === 1 : v.bool(body.isActive, "isActive");
     const hasServices = body.serviceIds !== undefined;
-    const serviceIds = hasServices ? v.ids(body.serviceIds, "serviceIds", { max: 50 }) : null;
+    const serviceIds = hasServices
+      ? v.ids(body.serviceIds, "serviceIds", { max: 50, allowEmpty: true })
+      : null;
     if (hasServices && serviceIds.length) assertServicesExist(serviceIds);
 
     db.exec("BEGIN");
@@ -368,17 +489,66 @@ function register(router) {
     return { master: mappers.master(updated, serviceMap.get(id) || []) };
   });
 
+  /* Умное удаление мастера: при наличии записей профиль не удаляется,
+     а отключается — иначе пропала бы история записей. Если записей нет,
+     удаляем профиль целиком: связи с услугами, график и блокировки
+     времени уходят каскадом (см. миграцию 002_init.sql). */
   router.delete("/api/admin/masters/:id", async (ctx) => {
     requireRole(ctx, "admin");
     const id = v.int(ctx.params.id, "id", { min: 1 });
     const db = getDb();
-    if (!db.prepare("SELECT id FROM masters WHERE id = ?").get(id)) {
-      throw notFound("Мастер не найден");
+    const row = db.prepare("SELECT id, full_name, user_id FROM masters WHERE id = ?").get(id);
+    if (!row) throw notFound("Мастер не найден");
+
+    const bookingsCount = db
+      .prepare("SELECT COUNT(*) AS c FROM bookings WHERE master_id = ?")
+      .get(id).c;
+
+    if (bookingsCount === 0) {
+      db.exec("BEGIN");
+      try {
+        db.prepare("DELETE FROM masters WHERE id = ?").run(id);
+        // Аккаунт мастера: если роль master — единственная, удаляем аккаунт
+        // вместе с его сессиями, иначе — оставляем аккаунт, но снимаем роль.
+        if (row.user_id) {
+          const roles = db
+            .prepare("SELECT role FROM user_roles WHERE user_id = ?")
+            .all(row.user_id)
+            .map((item) => item.role);
+          if (roles.length === 1 && roles[0] === "master") {
+            db.prepare("DELETE FROM users WHERE id = ?").run(row.user_id);
+          } else if (roles.includes("master")) {
+            db.prepare("DELETE FROM user_roles WHERE user_id = ? AND role = 'master'").run(row.user_id);
+          }
+        }
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
+      return {
+        masterId: id,
+        deleted: true,
+        disabled: false,
+        isActive: false,
+        bookingsCount: 0,
+        message: "Мастер «" + row.full_name + "» удалён: по нему не было записей.",
+      };
     }
+
     db.prepare(
       "UPDATE masters SET is_active = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?"
     ).run(id);
-    return { masterId: id, isActive: false };
+    return {
+      masterId: id,
+      deleted: false,
+      disabled: true,
+      isActive: false,
+      bookingsCount,
+      message:
+        "Мастер «" + row.full_name + "» не удалён: у него " + bookingsCount + " " +
+        recordsWord(bookingsCount) + ". Отключён — новые записи не создаются, старые остаются.",
+    };
   });
 
   router.put("/api/admin/masters/:id/services", async (ctx) => {
@@ -388,7 +558,10 @@ function register(router) {
     if (!db.prepare("SELECT id FROM masters WHERE id = ?").get(id)) {
       throw notFound("Мастер не найден");
     }
-    const serviceIds = v.ids((ctx.body || {}).serviceIds, "serviceIds", { max: 50 });
+    const serviceIds = v.ids((ctx.body || {}).serviceIds, "serviceIds", {
+      max: 50,
+      allowEmpty: true,
+    });
     if (serviceIds.length) assertServicesExist(serviceIds);
 
     db.exec("BEGIN");
@@ -402,6 +575,33 @@ function register(router) {
       throw error;
     }
     return { masterId: id, serviceIds };
+  });
+
+  /* Текущий график мастера — чтобы форма редактирования открывалась
+     с уже сохранёнными сменами, а не с пустым полем. */
+  router.get("/api/admin/masters/:id/schedule", async (ctx) => {
+    requireRole(ctx, "admin");
+    const id = v.int(ctx.params.id, "id", { min: 1 });
+    const db = getDb();
+    if (!db.prepare("SELECT id FROM masters WHERE id = ?").get(id)) {
+      throw notFound("Мастер не найден");
+    }
+    const rows = db
+      .prepare(
+        "SELECT weekday, start_time, end_time, valid_from, valid_to " +
+          "FROM master_schedules WHERE master_id = ? ORDER BY weekday, start_time"
+      )
+      .all(id);
+    return {
+      masterId: id,
+      schedule: rows.map((row) => ({
+        weekday: row.weekday,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        validFrom: row.valid_from ?? null,
+        validTo: row.valid_to ?? null,
+      })),
+    };
   });
 
   router.put("/api/admin/masters/:id/schedule", async (ctx) => {

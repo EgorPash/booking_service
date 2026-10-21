@@ -172,5 +172,54 @@
     getAdminAccess: function () {
       return request("/admin/access");
     },
+
+    /* Админ-раздел: справочник услуг. */
+    getAdminServices: function () {
+      return request("/admin/services");
+    },
+    createService: function (body) {
+      return request("/admin/services", { method: "POST", body: body });
+    },
+    updateService: function (id, body) {
+      return request("/admin/services/" + encodeURIComponent(id), {
+        method: "PATCH",
+        body: body,
+      });
+    },
+    deleteService: function (id) {
+      return request("/admin/services/" + encodeURIComponent(id), { method: "DELETE" });
+    },
+
+    /* Админ-раздел: мастера, их услуги и график. */
+    getAdminMasters: function () {
+      return request("/admin/masters");
+    },
+    createMaster: function (body) {
+      return request("/admin/masters", { method: "POST", body: body });
+    },
+    updateMaster: function (id, body) {
+      return request("/admin/masters/" + encodeURIComponent(id), {
+        method: "PATCH",
+        body: body,
+      });
+    },
+    deleteMaster: function (id) {
+      return request("/admin/masters/" + encodeURIComponent(id), { method: "DELETE" });
+    },
+    setMasterServices: function (id, serviceIds) {
+      return request("/admin/masters/" + encodeURIComponent(id) + "/services", {
+        method: "PUT",
+        body: { serviceIds: serviceIds },
+      });
+    },
+    getMasterSchedule: function (id) {
+      return request("/admin/masters/" + encodeURIComponent(id) + "/schedule");
+    },
+    setMasterSchedule: function (id, schedule) {
+      return request("/admin/masters/" + encodeURIComponent(id) + "/schedule", {
+        method: "PUT",
+        body: { schedule: schedule },
+      });
+    },
   };
 })();

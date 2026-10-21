@@ -116,7 +116,7 @@ function idList(value, name = "serviceIds") {
 }
 
 function ids(value, name, options = {}) {
-  const { max = 10 } = options;
+  const { max = 10, allowEmpty = false } = options;
   let items;
   if (Array.isArray(value)) items = value;
   else if (typeof value === "string") items = value.split(",");
@@ -131,7 +131,11 @@ function ids(value, name, options = {}) {
     }
     if (!result.includes(num)) result.push(num);
   }
-  if (result.length === 0) throw badRequest('Поле "' + name + '" не может быть пустым');
+  // Пустой список допустим там, где отметки можно снять целиком
+  // (например, «услуги мастера» в админ-разделе).
+  if (result.length === 0 && !allowEmpty) {
+    throw badRequest('Поле "' + name + '" не может быть пустым');
+  }
   if (result.length > max) throw badRequest('Слишком много элементов в "' + name + '"');
   return result;
 }

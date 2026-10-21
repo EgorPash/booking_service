@@ -286,6 +286,7 @@ function seed() {
         startsAt,
         endsAt: addMinutesIso(startsAt, service.durationMin),
         status: booking.status,
+        durationMin: service.durationMin,
         priceMinor: service.priceMinor,
         currency: "RUB",
         comment: booking.comment,

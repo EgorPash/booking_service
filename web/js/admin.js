@@ -8,7 +8,8 @@
    - доступ проверяет сервер: GET /api/admin/access отдаёт 403,
      если у пользователя нет роли admin. Роли приходят из БД
      списком, поэтому проверяем вхождение роли в список;
-   - страницы разделов пока пустые, данные по ним не грузим.
+   - страницы разделов (Услуги, Мастера) подключаются отдельно
+     и ждут window.AdminShell.ready.
    ========================================================= */
 
 "use strict";
@@ -176,25 +177,29 @@
 
   /* ---------- Запуск ---------- */
 
-  async function init() {
+  function init() {
     buildHeader();
 
-    let user = null;
-    try {
-      // Серверная проверка прав: 403, если роли admin нет.
-      const data = await window.API.getAdminAccess();
-      user = data && data.user ? data.user : null;
-    } catch (error) {
-      user = null;
-    }
-
-    if (!user) {
-      renderDenied();
-      return;
-    }
-
-    renderUser(user);
+    // Серверная проверка прав: 403, если роли admin нет.
+    return window.API
+      .getAdminAccess()
+      .then(function (data) {
+        return data && data.user ? data.user : null;
+      })
+      .catch(function () {
+        return null;
+      })
+      .then(function (user) {
+        if (!user) {
+          renderDenied();
+          return null;
+        }
+        renderUser(user);
+        return user;
+      });
   }
 
-  init();
+  // Страницы разделов ждут this.ready: null — доступа нет,
+  // тогда страница ничего не грузит (отказ покажет этот же файл).
+  window.AdminShell = { ready: init() };
 })();

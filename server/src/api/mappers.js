@@ -44,6 +44,7 @@ function booking(row) {
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     status: row.status,
+    durationMin: row.duration_min,
     priceMinor: row.price_minor,
     currency: row.currency,
     comment: row.comment ?? null,
@@ -54,6 +55,11 @@ function booking(row) {
 }
 
 function bookingDetail(row, timeZone) {
+  // Снимок услуги: длительность и цена фиксируются в момент записи,
+  // поэтому правка справочника не меняет уже оформленные записи.
+  const durationMin =
+    row.duration_min ?? row.service_duration_min ?? diffMinutesIso(row.starts_at, row.ends_at);
+
   return {
     id: row.id,
     status: row.status,
@@ -73,7 +79,7 @@ function bookingDetail(row, timeZone) {
     service: {
       id: row.service_id,
       name: row.service_name,
-      durationMin: row.service_duration_min,
+      durationMin,
     },
   };
 }

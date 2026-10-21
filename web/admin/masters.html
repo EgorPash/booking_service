@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="../tokens.css">
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
   <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body>
@@ -21,12 +23,62 @@
     <section class="screen active" data-admin-body data-admin-page="masters">
       <span class="eyebrow">Админ-панель</span>
       <h1 class="section-title">Мастера</h1>
-      <p class="admin-lead">Команда студии: профили мастеров и оказываемые ими услуги.</p>
-      <div class="data-empty">Список мастеров пока не выводится.</div>
+      <p class="admin-lead">
+        Профили мастеров: имя, должность, услуги и график работы. Отметки рядом с услугами
+        показывают, какие из них мастер выполняет — такие мастера доступны в форме записи.
+      </p>
+
+      <section class="admin-panel">
+        <h2 class="admin-panel-title">Добавить мастера</h2>
+        <form class="admin-form" data-master-create novalidate>
+          <div class="admin-grid">
+            <label class="field">
+              <span class="field-label">Имя</span>
+              <input class="field-input" name="fullName" type="text" maxlength="120" placeholder="Анна Соколова" required>
+            </label>
+            <label class="field">
+              <span class="field-label">Должность</span>
+              <input class="field-input" name="title" type="text" maxlength="200" placeholder="Колорист">
+            </label>
+            <label class="field">
+              <span class="field-label">Email аккаунта</span>
+              <input class="field-input" name="userEmail" type="email" maxlength="254" placeholder="anna@lumi.ru">
+              <span class="admin-hint">Необязательно: без него мастер работает без личного входа</span>
+            </label>
+            <label class="field">
+              <span class="field-label">Пароль аккаунта</span>
+              <input class="field-input" name="userPassword" type="password" minlength="8" maxlength="200" placeholder="Не короче 8 символов">
+            </label>
+          </div>
+
+          <div class="admin-fieldset">
+            <span class="field-label">Услуги мастера</span>
+            <div class="admin-check-list" data-master-create-services>
+              <span class="admin-hint">Загружаем услуги…</span>
+            </div>
+          </div>
+
+          <div class="admin-actions">
+            <button class="btn btn-primary" type="submit">Добавить мастера</button>
+          </div>
+          <p class="admin-message" data-master-create-message hidden></p>
+        </form>
+      </section>
+
+      <section class="admin-panel">
+        <h2 class="admin-panel-title">Список мастеров</h2>
+        <p class="admin-message" data-masters-message hidden></p>
+        <div class="admin-list" data-masters-list>
+          <div class="data-empty">Загружаем мастеров…</div>
+        </div>
+      </section>
     </section>
   </main>
 
   <script src="../js/api.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/admin-ui.js"></script>
   <script src="../js/admin.js"></script>
+  <script src="../js/admin-masters.js"></script>
 </body>
 </html>

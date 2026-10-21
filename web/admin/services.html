@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="../tokens.css">
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
   <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body>
@@ -21,12 +23,58 @@
     <section class="screen active" data-admin-body data-admin-page="services">
       <span class="eyebrow">Админ-панель</span>
       <h1 class="section-title">Услуги</h1>
-      <p class="admin-lead">Каталог услуг студии: название, длительность и цена.</p>
-      <div class="data-empty">Список услуг пока не выводится.</div>
+      <p class="admin-lead">
+        Каталог услуг студии: название, длительность и цена. Отключённая услуга пропадает
+        из формы записи, но записи по ней остаются — у них сохраняются своя цена и длительность.
+      </p>
+
+      <section class="admin-panel">
+        <h2 class="admin-panel-title">Добавить услугу</h2>
+        <form class="admin-form" data-service-create novalidate>
+          <div class="admin-grid">
+            <label class="field">
+              <span class="field-label">Название</span>
+              <input class="field-input" name="name" type="text" maxlength="200" placeholder="Женская стрижка" required>
+            </label>
+            <label class="field">
+              <span class="field-label">Длительность, минут</span>
+              <input class="field-input" name="durationMin" type="number" min="1" max="1440" step="1" placeholder="60" required>
+            </label>
+            <label class="field">
+              <span class="field-label">Цена, коп.</span>
+              <input class="field-input" name="priceMinor" type="number" min="1" step="1" placeholder="150000" required>
+              <span class="admin-hint" data-service-create-price-hint>—</span>
+            </label>
+            <label class="field">
+              <span class="field-label">Описание</span>
+              <input class="field-input" name="description" type="text" maxlength="1000" placeholder="Стрижка и укладка">
+            </label>
+            <label class="admin-check">
+              <input type="checkbox" name="isActive" checked>
+              <span class="admin-check-text">Активна</span>
+            </label>
+          </div>
+          <div class="admin-actions">
+            <button class="btn btn-primary" type="submit">Добавить услугу</button>
+          </div>
+          <p class="admin-message" data-service-create-message hidden></p>
+        </form>
+      </section>
+
+      <section class="admin-panel">
+        <h2 class="admin-panel-title">Каталог</h2>
+        <p class="admin-message" data-services-message hidden></p>
+        <div class="admin-list" data-services-list>
+          <div class="data-empty">Загружаем услуги…</div>
+        </div>
+      </section>
     </section>
   </main>
 
   <script src="../js/api.js"></script>
+  <script src="../js/format.js"></script>
+  <script src="../js/admin-ui.js"></script>
   <script src="../js/admin.js"></script>
+  <script src="../js/admin-services.js"></script>
 </body>
 </html>

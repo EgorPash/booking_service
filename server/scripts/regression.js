@@ -18,7 +18,14 @@
  *   7) клиент со своим профилом не подменяет его чужими данными;
  *   8) мастер уточняет имя профиля, но не переносит email;
  *   9) доступ к админ-разделу: гостю 401, клиенту и мастеру 403,
- *      администратору 200; роль — список, проверяется вхождение.
+ *      администратору 200; роль — список, проверяется вхождение;
+ *  10) формы админ-раздела проверяет сервер: пустое название услуги,
+ *      нулевая длительность и нулевая цена отклоняются;
+ *  11) умное удаление: услуга и мастер без записей удаляются,
+ *      с записями — отключаются; запись хранит снимок услуги
+ *      (цена и длительность) и не меняется после правки справочника;
+ *  12) отметки мастера: услуги назначаются и снимаются, мастер без
+ *      отметок не попадает в каталог по этой услуге.
  *
  * Запуск: npm test
  */
@@ -505,6 +512,272 @@ async function runChecks() {
     res.data && res.data.user && res.data.user.roles.indexOf("admin") !== -1,
     JSON.stringify(res.data)
   );
+
+  // --- 11. Услуги и мастера: проверки форм, умное удаление, снимок услуги ----
+  section("11. Админ-раздел: услуги и мастера");
+
+  // 11.1 Форма услуги: проверяет сервер, а не только браузер
+  res = await api(
+    "POST",
+    "/api/admin/services",
+    { name: "   ", durationMin: 30, priceMinor: 100000 },
+    adminCookie
+  );
+  check("пустое название услуги отклонено", res.status === 400, "статус " + res.status);
+  check(
+    "сообщение о пустом названии",
+    res.data && res.data.message === "Название услуги не может быть пустым",
+    JSON.stringify(res.data)
+  );
+
+  res = await api(
+    "POST",
+    "/api/admin/services",
+    { name: "Услуга " + TAG, durationMin: 0, priceMinor: 100000 },
+    adminCookie
+  );
+  check("нулевая длительность отклонена", res.status === 400, "статус " + res.status);
+  check(
+    "сообщение о длительности",
+    res.data && res.data.message === "Длительность услуги должна быть больше нуля",
+    JSON.stringify(res.data)
+  );
+
+  res = await api(
+    "POST",
+    "/api/admin/services",
+    { name: "Услуга " + TAG, durationMin: 30, priceMinor: 0 },
+    adminCookie
+  );
+  check("нулевая цена отклонена", res.status === 400, "статус " + res.status);
+  check(
+    "сообщение о цене",
+    res.data && res.data.message === "Цена услуги должна быть больше нуля",
+    JSON.stringify(res.data)
+  );
+
+  res = await api("POST", "/api/admin/services", { name: "Услуга " + TAG, durationMin: 30 }, adminCookie);
+  check("услуга без цены отклонена", res.status === 400, "статус " + res.status);
+
+  res = await api(
+    "PATCH",
+    "/api/admin/services/" + serviceId,
+    { name: "" },
+    adminCookie
+  );
+  check("правка услуги с пустым названием отклонена", res.status === 400, "статус " + res.status);
+
+  // 11.2 Услуга без записей удаляется целиком
+  const newServiceName = "Тестовая услуга " + TAG;
+  res = await api(
+    "POST",
+    "/api/admin/services",
+    { name: newServiceName, durationMin: 45, priceMinor: 123400, description: "Проверка" },
+    adminCookie
+  );
+  check("услуга создана", res.status === 201, "статус " + res.status + " " + JSON.stringify(res.data));
+  const newServiceId = res.data && res.data.service ? res.data.service.id : null;
+
+  res = await api("GET", "/api/admin/services", undefined, adminCookie);
+  const newServiceRow = (res.data.services || []).find((item) => item.id === newServiceId);
+  check("услуга есть в списке админа", Boolean(newServiceRow));
+  check("у новой услуги 0 записей", newServiceRow && newServiceRow.bookingsCount === 0);
+  check("у новой услуги 0 мастеров", newServiceRow && newServiceRow.mastersCount === 0);
+
+  res = await api("DELETE", "/api/admin/services/" + newServiceId, undefined, adminCookie);
+  check("удаление без записей удаляет услугу", res.status === 200 && res.data.deleted === true, JSON.stringify(res.data));
+  check("сервер объяснил, что произошло", res.data && typeof res.data.message === "string" && res.data.message.length > 0);
+  check("строки услуги нет в БД", !db.prepare("SELECT id FROM services WHERE id = ?").get(newServiceId));
+  res = await api("GET", "/api/services");
+  check("услуги нет в клиентском каталоге", !(res.data.services || []).some((item) => item.id === newServiceId));
+
+  // 11.3 Услуга с записями отключается, а не удаляется
+  const bookedServiceRow = db.prepare("SELECT service_id FROM bookings GROUP BY service_id LIMIT 1").get();
+  const bookedServiceId = bookedServiceRow.service_id;
+  res = await api("DELETE", "/api/admin/services/" + bookedServiceId, undefined, adminCookie);
+  check("услуга с записями не удалена", res.status === 200 && res.data.deleted === false, JSON.stringify(res.data));
+  check("услуга отключена", res.data && res.data.disabled === true);
+  check("сервер сообщил число записей", res.data && res.data.bookingsCount > 0, JSON.stringify(res.data));
+  const serviceRow = db.prepare("SELECT is_active FROM services WHERE id = ?").get(bookedServiceId);
+  check("строка услуги осталась в БД", Boolean(serviceRow));
+  check("услуга отключена в БД", serviceRow && serviceRow.is_active === 0);
+  res = await api("GET", "/api/services");
+  check("отключённой услуги нет в каталоге", !(res.data.services || []).some((item) => item.id === bookedServiceId));
+
+  // 11.4 Снимок услуги в записи не меняется после правки справочника
+  const snapshotRow = db
+    .prepare("SELECT id, duration_min, price_minor FROM bookings WHERE service_id = ? LIMIT 1")
+    .get(bookedServiceId);
+  res = await api("GET", "/api/bookings/" + snapshotRow.id, undefined, adminCookie);
+  check("запись по отключённой услуге читается", res.status === 200, "статус " + res.status);
+  check(
+    "в записи снимок длительности услуги",
+    res.data &&
+      res.data.booking &&
+      res.data.booking.service &&
+      res.data.booking.service.durationMin === snapshotRow.duration_min,
+    JSON.stringify(res.data && res.data.booking)
+  );
+  check(
+    "в записи снимок цены",
+    res.data && res.data.booking && res.data.booking.priceMinor === snapshotRow.price_minor,
+    String(res.data && res.data.booking && res.data.booking.priceMinor)
+  );
+
+  res = await api(
+    "PATCH",
+    "/api/admin/services/" + bookedServiceId,
+    { durationMin: snapshotRow.duration_min + 15, priceMinor: snapshotRow.price_minor + 1000 },
+    adminCookie
+  );
+  check("справочник услуги обновлён", res.status === 200, "статус " + res.status);
+  res = await api("GET", "/api/bookings/" + snapshotRow.id, undefined, adminCookie);
+  check(
+    "длительность в записи не изменилась",
+    res.data &&
+      res.data.booking &&
+      res.data.booking.service &&
+      res.data.booking.service.durationMin === snapshotRow.duration_min,
+    String(res.data && res.data.booking && res.data.booking.service && res.data.booking.service.durationMin)
+  );
+  check(
+    "цена в записи не изменилась",
+    res.data && res.data.booking && res.data.booking.priceMinor === snapshotRow.price_minor,
+    String(res.data && res.data.booking && res.data.booking.priceMinor)
+  );
+
+  // 11.5 Запись по отключённой услуге не создаётся
+  const providerRow = db
+    .prepare("SELECT master_id FROM master_services WHERE service_id = ? LIMIT 1")
+    .get(bookedServiceId);
+  if (providerRow) {
+    res = await api(
+      "POST",
+      "/api/bookings",
+      {
+        masterId: providerRow.master_id,
+        serviceIds: [bookedServiceId],
+        startsAt: "2030-01-07T09:00:00Z",
+        fullName: "Проверка Отключения",
+        phone: "+79005550001",
+      },
+      legacyCookie
+    );
+    check("запись по отключённой услуге отклонена", res.status === 400, "статус " + res.status);
+    check(
+      "сказано, что услуга недоступна",
+      res.data && typeof res.data.message === "string" && res.data.message.indexOf("недоступна") !== -1,
+      JSON.stringify(res.data)
+    );
+  }
+
+  // 11.6 Мастера: профиль, отметки услуг, график
+  res = await api("POST", "/api/admin/masters", { fullName: "  " }, adminCookie);
+  check("пустое имя мастера отклонено", res.status === 400, "статус " + res.status);
+  check(
+    "сообщение об имени мастера",
+    res.data && res.data.message === "Имя мастера не может быть пустым",
+    JSON.stringify(res.data)
+  );
+
+  const masterEmail = "new-master-" + TAG + "@lumi.studio";
+  res = await api(
+    "POST",
+    "/api/admin/masters",
+    {
+      fullName: "Новый Мастер",
+      title: "Стилист",
+      userEmail: masterEmail,
+      userPassword: "Master123!",
+      serviceIds: [serviceId],
+    },
+    adminCookie
+  );
+  check("мастер создан", res.status === 201, "статус " + res.status + " " + JSON.stringify(res.data));
+  const newMasterId = res.data && res.data.master ? res.data.master.id : null;
+  check(
+    "у мастера сохранены отметки услуг",
+    res.data && res.data.master && res.data.master.serviceIds.length === 1,
+    JSON.stringify(res.data && res.data.master)
+  );
+
+  res = await api("GET", "/api/masters?serviceId=" + serviceId);
+  check(
+    "мастер виден в каталоге по своей услуге",
+    (res.data.masters || []).some((item) => item.id === newMasterId)
+  );
+
+  res = await api(
+    "PUT",
+    "/api/admin/masters/" + newMasterId + "/services",
+    { serviceIds: [] },
+    adminCookie
+  );
+  check(
+    "отметки услуг сняты",
+    res.status === 200 && Array.isArray(res.data.serviceIds) && res.data.serviceIds.length === 0,
+    JSON.stringify(res.data)
+  );
+  res = await api("GET", "/api/masters?serviceId=" + serviceId);
+  check(
+    "мастер без отметок не виден в каталоге по услуге",
+    !(res.data.masters || []).some((item) => item.id === newMasterId)
+  );
+
+  res = await api(
+    "PUT",
+    "/api/admin/masters/" + newMasterId + "/services",
+    { serviceIds: [serviceId] },
+    adminCookie
+  );
+  check("отметка услуги возвращена", res.status === 200 && res.data.serviceIds.length === 1);
+
+  res = await api("GET", "/api/admin/masters/" + newMasterId + "/schedule", undefined, adminCookie);
+  check(
+    "график мастера читается",
+    res.status === 200 && Array.isArray(res.data.schedule),
+    JSON.stringify(res.data)
+  );
+  res = await api(
+    "PUT",
+    "/api/admin/masters/" + newMasterId + "/schedule",
+    { schedule: [{ weekday: 1, startTime: "10:00", endTime: "19:00" }] },
+    adminCookie
+  );
+  check("график сохранён", res.status === 200, "статус " + res.status + " " + JSON.stringify(res.data));
+  res = await api("GET", "/api/admin/masters/" + newMasterId + "/schedule", undefined, adminCookie);
+  check(
+    "график прочитан обратно",
+    res.data.schedule.length === 1 &&
+      res.data.schedule[0].weekday === 1 &&
+      res.data.schedule[0].startTime === "10:00" &&
+      res.data.schedule[0].endTime === "19:00",
+    JSON.stringify(res.data)
+  );
+  res = await api(
+    "PUT",
+    "/api/admin/masters/" + newMasterId + "/schedule",
+    { schedule: [{ weekday: 8, startTime: "10:00", endTime: "19:00" }] },
+    adminCookie
+  );
+  check("неверный день недели отклонён", res.status === 400, "статус " + res.status);
+
+  // 11.7 Умное удаление мастера
+  res = await api("DELETE", "/api/admin/masters/" + newMasterId, undefined, adminCookie);
+  check("мастер без записей удалён", res.status === 200 && res.data.deleted === true, JSON.stringify(res.data));
+  check("профиля мастера нет в БД", !db.prepare("SELECT id FROM masters WHERE id = ?").get(newMasterId));
+  check("аккаунт мастера удалён вместе с профилем", !db.prepare("SELECT id FROM users WHERE email = ?").get(masterEmail));
+  res = await api("GET", "/api/masters");
+  check("удалённого мастера нет в каталоге", !(res.data.masters || []).some((item) => item.id === newMasterId));
+
+  const bookedMasterRow = db.prepare("SELECT master_id FROM bookings GROUP BY master_id LIMIT 1").get();
+  res = await api("DELETE", "/api/admin/masters/" + bookedMasterRow.master_id, undefined, adminCookie);
+  check("мастер с записями не удалён", res.status === 200 && res.data.deleted === false, JSON.stringify(res.data));
+  check("мастер отключён", res.data && res.data.disabled === true);
+  const masterRow = db.prepare("SELECT is_active FROM masters WHERE id = ?").get(bookedMasterRow.master_id);
+  check("мастер остался в БД и отключён", masterRow && masterRow.is_active === 0);
+  res = await api("GET", "/api/masters");
+  check("отключённый мастер пропал из каталога", !(res.data.masters || []).some((item) => item.id === bookedMasterRow.master_id));
 }
 
 main();

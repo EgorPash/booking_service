@@ -266,6 +266,7 @@ function createBookings(user, body) {
         startsAt: cursor,
         endsAt: time.addMinutesIso(cursor, service.duration_min),
         status: "pending",
+        durationMin: service.duration_min,
         priceMinor: service.price_minor,
         currency: service.currency,
         comment,
