@@ -2,7 +2,11 @@
 
 const BOOKING_SELECT =
   "SELECT b.*, c.full_name AS client_full_name, c.phone AS client_phone, " +
-  "m.full_name AS master_full_name, s.name AS service_name, s.duration_min AS service_duration_min " +
+  "m.full_name AS master_full_name, " +
+  // Название услуги — снимок из самой записи: переименование услуги
+  // в справочнике не должно менять уже оформленные записи.
+  "COALESCE(b.service_name, s.name) AS service_name, " +
+  "s.duration_min AS service_duration_min " +
   "FROM bookings b " +
   "JOIN clients c ON c.id = b.client_id " +
   "JOIN masters m ON m.id = b.master_id " +

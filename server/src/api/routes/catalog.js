@@ -8,9 +8,15 @@ const mappers = require("../mappers");
 
 function register(router) {
   router.get("/api/services", async () => {
+    /* Клиенту показываем только те услуги, которые реально оказывает
+       хотя бы один активный мастер: иначе клиент выбирает услугу,
+       но записаться к ней не к кому. */
     const rows = getDb()
       .prepare(
-        "SELECT id, name, description, duration_min, price_minor, currency, is_active FROM services WHERE is_active = 1 ORDER BY name"
+        "SELECT s.id, s.name, s.description, s.duration_min, s.price_minor, s.currency, s.is_active " +
+          "FROM services s WHERE s.is_active = 1 AND EXISTS (" +
+          "SELECT 1 FROM master_services ms JOIN masters m ON m.id = ms.master_id " +
+          "WHERE ms.service_id = s.id AND m.is_active = 1) ORDER BY s.name"
       )
       .all();
     return { services: rows.map(mappers.service) };

@@ -584,6 +584,45 @@ async function runChecks() {
   check("у новой услуги 0 записей", newServiceRow && newServiceRow.bookingsCount === 0);
   check("у новой услуги 0 мастеров", newServiceRow && newServiceRow.mastersCount === 0);
 
+  // 11.2a Клиентский каталог: услугу без активного мастера не показываем
+  res = await api("GET", "/api/services");
+  check(
+    "услуга без мастера не попадает в клиентский каталог",
+    !(res.data.services || []).some((item) => item.id === newServiceId)
+  );
+
+  const activeMasterRow = db
+    .prepare("SELECT id FROM masters WHERE is_active = 1 ORDER BY id LIMIT 1")
+    .get();
+  const activeMasterServiceIds = db
+    .prepare("SELECT service_id FROM master_services WHERE master_id = ?")
+    .all(activeMasterRow.id)
+    .map((row) => row.service_id);
+  res = await api(
+    "PUT",
+    "/api/admin/masters/" + activeMasterRow.id + "/services",
+    { serviceIds: activeMasterServiceIds.concat([newServiceId]) },
+    adminCookie
+  );
+  check("мастеру назначена новая услуга", res.status === 200, "статус " + res.status);
+  res = await api("GET", "/api/services");
+  check(
+    "с назначенным мастером услуга появилась в клиентском каталоге",
+    (res.data.services || []).some((item) => item.id === newServiceId)
+  );
+  res = await api(
+    "PUT",
+    "/api/admin/masters/" + activeMasterRow.id + "/services",
+    { serviceIds: activeMasterServiceIds },
+    adminCookie
+  );
+  check("отметки услуг мастера восстановлены", res.status === 200, "статус " + res.status);
+  res = await api("GET", "/api/services");
+  check(
+    "после снятия отметки услуга снова скрыта от клиента",
+    !(res.data.services || []).some((item) => item.id === newServiceId)
+  );
+
   res = await api("DELETE", "/api/admin/services/" + newServiceId, undefined, adminCookie);
   check("удаление без записей удаляет услугу", res.status === 200 && res.data.deleted === true, JSON.stringify(res.data));
   check("сервер объяснил, что произошло", res.data && typeof res.data.message === "string" && res.data.message.length > 0);
@@ -608,6 +647,9 @@ async function runChecks() {
   const snapshotRow = db
     .prepare("SELECT id, duration_min, price_minor FROM bookings WHERE service_id = ? LIMIT 1")
     .get(bookedServiceId);
+  const snapshotName = db
+    .prepare("SELECT name FROM services WHERE id = ?")
+    .get(bookedServiceId).name;
   res = await api("GET", "/api/bookings/" + snapshotRow.id, undefined, adminCookie);
   check("запись по отключённой услуге читается", res.status === 200, "статус " + res.status);
   check(
@@ -623,11 +665,20 @@ async function runChecks() {
     res.data && res.data.booking && res.data.booking.priceMinor === snapshotRow.price_minor,
     String(res.data && res.data.booking && res.data.booking.priceMinor)
   );
+  check(
+    "в записи снимок названия услуги",
+    res.data && res.data.booking && res.data.booking.service && res.data.booking.service.name === snapshotName,
+    String(res.data && res.data.booking && res.data.booking.service && res.data.booking.service.name)
+  );
 
   res = await api(
     "PATCH",
     "/api/admin/services/" + bookedServiceId,
-    { durationMin: snapshotRow.duration_min + 15, priceMinor: snapshotRow.price_minor + 1000 },
+    {
+      name: snapshotName + " (переименовано)",
+      durationMin: snapshotRow.duration_min + 15,
+      priceMinor: snapshotRow.price_minor + 1000,
+    },
     adminCookie
   );
   check("справочник услуги обновлён", res.status === 200, "статус " + res.status);
@@ -644,6 +695,11 @@ async function runChecks() {
     "цена в записи не изменилась",
     res.data && res.data.booking && res.data.booking.priceMinor === snapshotRow.price_minor,
     String(res.data && res.data.booking && res.data.booking.priceMinor)
+  );
+  check(
+    "название в записи не изменилось",
+    res.data && res.data.booking && res.data.booking.service && res.data.booking.service.name === snapshotName,
+    String(res.data && res.data.booking && res.data.booking.service && res.data.booking.service.name)
   );
 
   // 11.5 Запись по отключённой услуге не создаётся

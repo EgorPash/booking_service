@@ -55,6 +55,7 @@ node web/server.js          # клиентская часть на :4100
 - **Файл:** `web/booking.html`, `web/js/booking.js`, `web/js/store.js`, `web/js/booking-time.js`.
 - **Показывает:** четыре шага — услуга, мастер, дата, время. Услуги можно выбирать несколько, цена и длительность складываются. На шаге мастера видно, кто не оказывает выбранные услуги. На шаге даты — календарь с отметками свободных дней и дней без окон; на шаге времени — свободные окна по частям дня и поиск ближайшего окна, если на день ничего нет. На узких экранах внизу закреплены итог и кнопка «Далее».
 - **Эндпоинты:** `GET /api/services`, `GET /api/masters`, `GET /api/studio`, `GET /api/masters/:id/slots?date=…&serviceIds=…`.
+- **Особенность каталога:** `GET /api/services` отдаёт только активные услуги, которые оказывает хотя бы один активный мастер, — услугу без мастера клиент не видит.
 - **Поля ответа:**
   - `services[].id`, `name`, `durationMin`, `priceMinor`, `currency` — выбор услуг и итог.
   - `masters[].id`, `fullName`, `title`, `serviceIds` — карточка мастера и проверка, что он оказывает все выбранные услуги.
@@ -216,6 +217,14 @@ node web/server.js          # клиентская часть на :4100
 | Админ-API: «умное» удаление услуги и мастера (без записей — удаление, с записями — отключение с объяснением), счётчики `bookingsCount`/`mastersCount` в списках, чтение графика `GET /api/admin/masters/:id/schedule`, пустой список услуг у мастера, понятные сообщения об ошибках валидации | `server/src/api/routes/admin.js`, `server/src/api/validate.js` |
 | В запись добавлен снимок длительности услуги: миграция `008_booking_service_snapshot.sql` (`bookings.duration_min`), единственная точка вставки `insertBookingRow`, `durationMin` в API | `server/src/db/migrations/008_booking_service_snapshot.sql`, `server/src/db/bookings.js`, `server/src/api/booking-service.js`, `server/src/api/mappers.js` |
 | Проверки: регресс `npm test` в `server/` — 98/98 (секция 11: валидация форм, умное удаление, снимок услуги, отметки мастера, график); браузерная проверка новых экранов — 18/18 (создание, правка, ошибки формы, диалог удаления, сохранение графика) | `server/scripts/regression.js`, `C:\Users\user\AppData\Local\Temp\opencode\ui-admin-pages-check.js` |
+
+## 2026-10-21: снимок названия услуги и правило «некому выполнять»
+
+| Что сделано | Где |
+|---|---|
+| В запись добавлен снимок названия услуги: миграция `009_booking_service_name_snapshot.sql` (`bookings.service_name`), единственная точка вставки `insertBookingRow`, при чтении `COALESCE(b.service_name, s.name)` | `server/src/db/migrations/009_booking_service_name_snapshot.sql`, `server/src/db/bookings.js`, `server/src/api/booking-service.js`, `server/src/api/sql.js` |
+| Публичный каталог отдаёт только активные услуги, которые оказывает хотя бы один активный мастер: услуга без мастера больше не предлагается клиенту (раньше клиент выбирал её и упирался в тупик). Админский каталог не изменился | `server/src/api/routes/catalog.js` |
+| Проверки: регресс `npm test` в `server/` — 105/105 (в том числе снимок названия и новое правило каталога); браузерная проверка жизненного цикла услуги — 19/19; браузерная проверка связей «мастер → услуга», мягкого удаления и снимка цены/длительности/названия — 23/23 | `server/scripts/regression.js`, `C:\Users\user\AppData\Local\Temp\opencode\ui-service-lifecycle-check.js`, `C:\Users\user\AppData\Local\Temp\opencode\ui-links-softdelete-price-check.js` |
 
 ## Следующая итерация
 

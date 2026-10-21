@@ -283,6 +283,7 @@ function seed() {
         clientId: clientIdByPhone.get(booking.clientPhone),
         masterId,
         serviceId: service.id,
+        serviceName: service.name,
         startsAt,
         endsAt: addMinutesIso(startsAt, service.durationMin),
         status: booking.status,

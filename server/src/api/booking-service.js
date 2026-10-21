@@ -263,6 +263,7 @@ function createBookings(user, body) {
         clientId: client.id,
         masterId,
         serviceId: service.id,
+        serviceName: service.name,
         startsAt: cursor,
         endsAt: time.addMinutesIso(cursor, service.duration_min),
         status: "pending",
