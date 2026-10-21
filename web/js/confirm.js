@@ -24,6 +24,7 @@
   var PHONE = document.getElementById("client-phone");
   var EMAIL = document.getElementById("client-email");
   var COMMENT = document.getElementById("comment");
+  var HINT = document.getElementById("client-hint");
 
   var SUMMARY_MASTER = document.getElementById("summary-master");
   var SUMMARY_DATE = document.getElementById("summary-date");
@@ -63,6 +64,12 @@
 
   function setText(node, text) {
     if (node) node.textContent = text;
+  }
+
+  function setReadOnly(node, readOnly) {
+    if (!node) return;
+    node.readOnly = Boolean(readOnly);
+    node.setAttribute("aria-readonly", readOnly ? "true" : "false");
   }
 
   function show(node, visible) {
@@ -114,21 +121,36 @@
   /* ---------- Отрисовка ---------- */
 
   function renderClient(client) {
-    if (client && client.fullName) {
+    var hasName = Boolean(client && client.fullName);
+    var hasPhone = Boolean(client && client.phone);
+
+    if (hasName) {
       NAME.value = client.fullName;
       NAME.placeholder = "";
     } else {
       NAME.value = "";
-      NAME.placeholder = "Из профиля аккаунта";
+      NAME.placeholder = "Как к вам обращаться";
     }
 
-    if (client && client.phone) {
+    if (hasPhone) {
       PHONE.value = client.phone;
       PHONE.placeholder = "";
     } else {
       PHONE.value = "";
-      PHONE.placeholder = "Из профиля аккаунта";
+      PHONE.placeholder = "+7 900 000-00-00";
     }
+
+    // Профиля клиента нет — поля заполняет сам клиент: сервер берёт их, чтобы
+    // завести профиль. Профиль есть — поля только для чтения.
+    var editable = !(hasName && hasPhone);
+    setReadOnly(NAME, !editable);
+    setReadOnly(PHONE, !editable);
+    setText(
+      HINT,
+      editable
+        ? "Профиля клиента нет — укажите имя и телефон, чтобы оформить запись."
+        : "Имя и телефон берутся из профиля клиента."
+    );
   }
 
   function endTimeSuffix() {
@@ -472,6 +494,13 @@
     var comment = COMMENT.value.trim();
     if (comment) payload.comment = comment;
 
+    // Профиля клиента нет — сервер возьмёт имя и телефон отсюда, чтобы
+    // завести профиль. Если профиль есть, сервер использует свой.
+    var fullName = NAME.value.trim();
+    var phone = PHONE.value.trim();
+    if (fullName) payload.fullName = fullName;
+    if (phone) payload.phone = phone;
+
     try {
       var response = await window.API.createBooking(payload);
       saveResult(response, comment);
@@ -555,8 +584,8 @@
       studioTz = studio && studio.timezone ? studio.timezone : undefined;
     }
 
-    var client = null;
-    if (bookingsResult.status === "fulfilled") {
+    var client = (me && me.client) || null;
+    if (!client && bookingsResult.status === "fulfilled") {
       var list =
         (bookingsResult.value && bookingsResult.value.bookings) || [];
       for (var i = 0; i < list.length; i += 1) {

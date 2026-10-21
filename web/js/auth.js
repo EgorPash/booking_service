@@ -20,6 +20,22 @@
     return /^[a-z0-9_-]+\.html(\?[^\s#]*)?$/i.test(raw) ? raw : null;
   }
 
+  /* Куда вести после входа: клиенту — в личный кабинет, администратору —
+     в админ-раздел. Роли берём у сервера (это список), поэтому проверяем
+     вхождение роли admin, а не равенство. */
+  async function landingPage() {
+    const next = nextTarget();
+    if (next) return next;
+
+    try {
+      const me = await window.API.getMe();
+      if (me && me.user && window.API.isAdmin(me.user)) return "admin/";
+    } catch (error) {
+      // сервер не ответил — ведём в кабинет по умолчанию
+    }
+    return "dashboard.html";
+  }
+
   const formsCard = document.getElementById("auth-forms");
   const sessionCard = document.getElementById("auth-session");
   const sessionEmail = document.getElementById("session-email");
@@ -152,7 +168,7 @@
       setBusy(form, true);
       try {
         await action(buildPayload(readForm(form)));
-        window.location.assign(nextTarget() || "dashboard.html");
+        window.location.assign(await landingPage());
       } catch (error) {
         setBusy(form, false);
         const field = fieldFromError(error);
@@ -208,6 +224,13 @@
     formsCard.hidden = true;
     sessionCard.hidden = false;
     sessionEmail.textContent = (user && user.email) || "—";
+    // Администратору — в админ-раздел, остальным — в кабинет.
+    const link = document.getElementById("session-cabinet-link");
+    if (link) {
+      const admin = window.API.isAdmin(user);
+      link.href = admin ? "admin/" : "dashboard.html";
+      link.textContent = admin ? "В админ-панель" : "В личный кабинет";
+    }
   }
 
   /* ---------- Проверка сессии при открытии ---------- */

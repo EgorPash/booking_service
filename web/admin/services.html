@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Услуги — Админ-панель Lumi Beauty Studio</title>
+  <link rel="icon" href="../favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <header class="site-header" data-admin-header></header>
+
+  <main class="container">
+    <section class="screen active" data-admin-body data-admin-page="services">
+      <span class="eyebrow">Админ-панель</span>
+      <h1 class="section-title">Услуги</h1>
+      <p class="admin-lead">Каталог услуг студии: название, длительность и цена.</p>
+      <div class="data-empty">Список услуг пока не выводится.</div>
+    </section>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>

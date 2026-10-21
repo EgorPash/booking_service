@@ -75,16 +75,55 @@ function resolveMasterId(db, user, body) {
   return v.int(body.masterId, "masterId", { min: 1 });
 }
 
+/**
+ * Профиль клиента для новой записи.
+ *
+ * Клиент (роль client) всегда работает со своим профилем: ищем по email.
+ * Профиля нет — значит клиент пришёл с телефона, по которому запись завёл
+ * мастер, или профиль ещё не заведён. Тогда клиент присылает имя и телефон
+ * сам, и мы заводим профиль. Чужой профиль (email уже занят) НЕ трогаем:
+ * переписывать его full_name нельзя — это портит данные другого человека.
+ *
+ * Мастер и администратор создают запись для клиента: профиль заводится или
+ * уточняется по имени и телефону, но email чужого профиля не переносится.
+ */
 function resolveClientProfile(db, user, body) {
   if (isClientOnly(user)) {
     const own = db
       .prepare("SELECT id, full_name, phone, email FROM clients WHERE email = ?")
       .get(user.email);
     if (own) return own;
+
+    if (body.clientId !== undefined) {
+      throw forbidden("Клиент не может выбрать другого клиента");
+    }
+
+    const fullName = v.string(body.fullName, "fullName", { max: 120 });
+    const phone = v.phone(body.phone);
+    const existing = db
+      .prepare("SELECT id, full_name, phone, email FROM clients WHERE phone = ?")
+      .get(phone);
+
+    if (existing) {
+      if (existing.email) {
+        throw conflict("Этот телефон уже привязан к другому клиенту");
+      }
+      // Профиль «ничейный» (email IS NULL) — забираем его себе.
+      db.prepare(
+        "UPDATE clients SET full_name = ?, email = ?, " +
+          "updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?"
+      ).run(fullName, user.email, existing.id);
+    } else {
+      db.prepare("INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?)").run(
+        fullName,
+        phone,
+        user.email
+      );
+    }
+    return db.prepare("SELECT id, full_name, phone, email FROM clients WHERE phone = ?").get(phone);
   }
 
   if (body.clientId !== undefined) {
-    if (isClientOnly(user)) throw forbidden("Клиент не может выбрать другого клиента");
     const id = v.int(body.clientId, "clientId", { min: 1 });
     const row = db.prepare("SELECT id, full_name, phone, email FROM clients WHERE id = ?").get(id);
     if (!row) throw notFound("Клиент не найден");
@@ -93,11 +132,15 @@ function resolveClientProfile(db, user, body) {
 
   const fullName = v.string(body.fullName, "fullName", { max: 120 });
   const phone = v.phone(body.phone);
-  db.prepare(
-    "INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?) " +
-      "ON CONFLICT(phone) DO UPDATE SET full_name = excluded.full_name, " +
-      "updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now')"
-  ).run(fullName, phone, isClientOnly(user) ? user.email : null);
+  const existing = db.prepare("SELECT id, full_name, phone, email FROM clients WHERE phone = ?").get(phone);
+  if (existing) {
+    db.prepare(
+      "UPDATE clients SET full_name = ?, " +
+        "updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?"
+    ).run(fullName, existing.id);
+  } else {
+    db.prepare("INSERT INTO clients (full_name, phone, email) VALUES (?, ?, NULL)").run(fullName, phone);
+  }
   return db.prepare("SELECT id, full_name, phone, email FROM clients WHERE phone = ?").get(phone);
 }
 

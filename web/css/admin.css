@@ -1,0 +1,52 @@
+/* =========================================================
+   web/css/admin.css — каркас админ-раздела и страница отказа.
+   Цвета, шрифт, радиусы и тени берём из tokens.css,
+   новых значений не добавляем. Базовые стили шапки —
+   из main.css и header.css, админ-шапка собрана в web/js/admin.js.
+   ========================================================= */
+
+/* ---------- Страница админ-раздела ---------- */
+
+.admin-lead {
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  max-width: 620px;
+}
+
+.admin-note {
+  margin: 20px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+/* ---------- Отказ в доступе ---------- */
+
+.admin-denied {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 40px 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.admin-denied .eyebrow {
+  margin-bottom: 14px;
+}
+
+.admin-denied-text {
+  margin: 14px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.98rem;
+}
+
+.admin-denied-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 26px;
+}

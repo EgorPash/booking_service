@@ -4,8 +4,8 @@
        <header class="site-header" data-client-header></header>
    и подключают этот файл — разметка шапки больше не дублируется.
    Имя вошедшего клиента берётся из API:
-     GET /api/auth/me   — вошёл ли пользователь;
-     GET /api/bookings/my — имя клиента (client.fullName).
+     GET /api/auth/me   — вошёл ли пользователь, профиль клиента (client.fullName);
+     GET /api/bookings/my — имя клиента, если профиля у аккаунта нет.
    Если клиент не вошёл — показываем кнопки входа и регистрации.
    ========================================================= */
 
@@ -152,6 +152,7 @@
 
     const logout = el("button", "btn btn-ghost", "Выйти");
     logout.type = "button";
+    logout.id = "header-logout-button";
     logout.addEventListener("click", async function () {
       logout.disabled = true;
       try {
@@ -164,6 +165,18 @@
 
     actions.appendChild(chip);
     actions.appendChild(logout);
+  }
+
+  /* Ссылка на админ-раздел показываем только администратору:
+     роль приходит списком, поэтому проверяем вхождение роли в список.
+     Это удобство, а не защита: доступ закрыт на сервере. */
+  function addAdminLink() {
+    const nav = document.getElementById("client-nav");
+    if (!nav || nav.querySelector("[data-admin-link]")) return;
+    const link = el("a", "nav-link", "Админ");
+    link.href = "admin/";
+    link.setAttribute("data-admin-link", "");
+    nav.appendChild(link);
   }
 
   async function load() {
@@ -181,17 +194,27 @@
     }
 
     let name = null;
-    try {
-      const data = await window.API.getMyBookings();
-      const first = data && data.bookings && data.bookings[0];
-      if (first && first.client && first.client.fullName) {
-        name = first.client.fullName;
+    // Профиль клиента — из /api/auth/me (client.fullName). Если профиля нет
+    // (клиент зарегистрировался без него), берём имя из его записей.
+    if (me.client && me.client.fullName) {
+      name = me.client.fullName;
+    } else {
+      try {
+        const data = await window.API.getMyBookings();
+        const first = data && data.bookings && data.bookings[0];
+        if (first && first.client && first.client.fullName) {
+          name = first.client.fullName;
+        }
+      } catch (error) {
+        // имя — необязательное: покажем email, если записей/имени нет
       }
-    } catch (error) {
-      // имя — необязательное: покажем email, если записей/имени нет
     }
 
     renderUser(me.user, name);
+
+    if (window.API.isAdmin(me.user)) {
+      addAdminLink();
+    }
   }
 
   build();

@@ -37,6 +37,12 @@
     }
   }
 
+  /* Роли приходят списком (в таблице user_roles их может быть несколько),
+     поэтому проверяем вхождение роли в список, а не равенство. */
+  function hasRole(user, role) {
+    return Boolean(user && Array.isArray(user.roles) && user.roles.indexOf(role) !== -1);
+  }
+
   async function request(path, options) {
     const opts = options || {};
     const headers = Object.assign({ Accept: "application/json" }, opts.headers || {});
@@ -82,6 +88,10 @@
 
   window.API = {
     request: request,
+    hasRole: hasRole,
+    isAdmin: function (user) {
+      return hasRole(user, "admin");
+    },
     getStudio: function () {
       return request("/studio");
     },
@@ -155,6 +165,12 @@
     },
     getMyBookings: function () {
       return request("/bookings/my");
+    },
+
+    /* Проверка доступа к админ-разделу. Сервер отдаёт 403, если у
+       пользователя нет роли admin (роли берутся из БД списком). */
+    getAdminAccess: function () {
+      return request("/admin/access");
     },
   };
 })();

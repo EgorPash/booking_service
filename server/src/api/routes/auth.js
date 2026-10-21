@@ -29,15 +29,21 @@ function links(user) {
   const db = getDb();
   let masterId = null;
   let clientId = null;
+  let client = null;
   if (hasRole(user, "master")) {
     const master = db.prepare("SELECT id FROM masters WHERE user_id = ?").get(user.id);
     if (master) masterId = master.id;
   }
   if (hasRole(user, "client")) {
-    const client = db.prepare("SELECT id FROM clients WHERE email = ?").get(user.email);
-    if (client) clientId = client.id;
+    const row = db
+      .prepare("SELECT id, full_name, phone, email FROM clients WHERE email = ?")
+      .get(user.email);
+    if (row) {
+      clientId = row.id;
+      client = { id: row.id, fullName: row.full_name, phone: row.phone };
+    }
   }
-  return { masterId, clientId };
+  return { masterId, clientId, client };
 }
 
 function register(router) {
@@ -59,14 +65,37 @@ function register(router) {
     let user;
     let client;
     try {
-      // Профиль клиента создаём только если такого телефона ещё нет. Существующую
-      // запись НЕ трогаем: иначе регистрацией на чужой телефон можно было бы
-      // переписать email чужого профиля и получить доступ к его записям.
-      db.prepare(
-        "INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?) " +
-          "ON CONFLICT(phone) DO NOTHING"
-      ).run(fullName, phone, email);
-      client = db.prepare("SELECT id, full_name, phone FROM clients WHERE phone = ?").get(phone);
+      // Телефон у клиента уникален, поэтому профиль на этом номере может уже
+      // быть. Он бывает двух видов:
+      //   • «ничейный» (email IS NULL) — его создаёт мастер, заводя запись для
+      //     клиента. Такой профиль новый аккаунт забирает: человек с этим
+      //     телефоном и есть тот самый клиент;
+      //   • привязанный к другому email — чужой. Тогда регистрацию отклоняем,
+      //     иначе на чужой телефон можно было бы завести второй аккаунт.
+      // Заодно НЕ переносим email в чужой профиль: это дало бы доступ к его
+      // записям.
+      const existing = db
+        .prepare("SELECT id, full_name, phone, email FROM clients WHERE phone = ?")
+        .get(phone);
+      if (existing) {
+        if (existing.email) {
+          throw conflict(
+            "Этот телефон уже привязан к другому аккаунту — войдите в него или укажите другой номер"
+          );
+        }
+        db.prepare(
+          "UPDATE clients SET full_name = ?, email = ?, " +
+            "updated_at = strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id = ?"
+        ).run(fullName, email, existing.id);
+        client = db.prepare("SELECT id, full_name, phone FROM clients WHERE id = ?").get(existing.id);
+      } else {
+        db.prepare("INSERT INTO clients (full_name, phone, email) VALUES (?, ?, ?)").run(
+          fullName,
+          phone,
+          email
+        );
+        client = db.prepare("SELECT id, full_name, phone FROM clients WHERE phone = ?").get(phone);
+      }
 
       const info = db
         .prepare("INSERT INTO users (email, password_hash, is_active) VALUES (?, ?, 1)")
@@ -91,6 +120,7 @@ function register(router) {
     ctx.status = 201;
     return {
       user: publicUser(user),
+      clientId: client.id,
       client: { id: client.id, fullName: client.full_name, phone: client.phone },
     };
   });
@@ -117,7 +147,13 @@ function register(router) {
 
     const user = { id: row.id, email: row.email, roles: rolesOfUser(row.id) };
     ctx.res.setHeader("Set-Cookie", sessionCookie(createSession(user.id)));
-    return { user: publicUser(user) };
+    const ids = links(user);
+    return {
+      user: publicUser(user),
+      masterId: ids.masterId,
+      clientId: ids.clientId,
+      client: ids.client,
+    };
   });
 
   router.post("/api/auth/logout", async (ctx) => {
@@ -129,7 +165,12 @@ function register(router) {
   router.get("/api/auth/me", async (ctx) => {
     const user = requireAuth(ctx);
     const ids = links(user);
-    return { user: publicUser(user), masterId: ids.masterId, clientId: ids.clientId };
+    return {
+      user: publicUser(user),
+      masterId: ids.masterId,
+      clientId: ids.clientId,
+      client: ids.client,
+    };
   });
 }
 

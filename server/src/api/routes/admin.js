@@ -2,8 +2,8 @@
 
 const { getDb } = require("../../db/connection");
 const { hashPassword } = require("../../auth/password");
-const { HttpError, badRequest, notFound, conflict } = require("../http");
-const { requireRole } = require("../session");
+const { HttpError, badRequest, notFound, conflict, forbidden } = require("../http");
+const { requireRole, requireAuth, hasRole } = require("../session");
 const { getStudio, assertServicesExist } = require("../availability");
 const { bookingSelect, masterServiceIds } = require("../sql");
 const { setStatusByAdmin } = require("../booking-service");
@@ -29,6 +29,18 @@ function studioView(studio) {
 }
 
 function register(router) {
+  /* Проверка доступа к админ-разделу — единая точка правды.
+     Роли приходят из БД (user_roles) списком, поэтому смотрим вхождение
+     роли в список, а не равенство: у пользователя их может быть несколько.
+     Роль admin назначается только в БД — выдать её через API нельзя. */
+  router.get("/api/admin/access", async (ctx) => {
+    const user = requireAuth(ctx);
+    if (!hasRole(user, "admin")) {
+      throw forbidden("Этот раздел только для администраторов");
+    }
+    return { user: { id: user.id, email: user.email, roles: user.roles } };
+  });
+
   router.get("/api/admin/studio", async (ctx) => {
     requireRole(ctx, "admin");
     const studio = getStudio();
